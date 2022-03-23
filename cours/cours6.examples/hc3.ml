@@ -13,7 +13,7 @@ and term_node =
 (* structure parametre *)
 module Term_node = struct
   type t = term_node
-  let equal (x,y) = match x,y with
+  let equal x y = match x,y with
     | Const i, Const j -> i == j
     | Plus (t1,t2), Plus (u1,u2) ->
        t1 == u1 && t2 == u2
@@ -29,7 +29,7 @@ end
 (* signature de la structure parametre *)
 module type HashedType = sig
   type t
-  val equal: t * t -> bool
+  val equal: t -> t -> bool
   val hash: t-> int
 end
 
@@ -41,16 +41,16 @@ module type S =
   end
 (* tres simplifiee *)
 
-module Make(H : HashedType) : (S with type value = H.t) =
+module Make(T : HashedType) : (S with type value = T.t) =
 struct
-  type value = H.t
-  type t = (H.t,H.t with_hashkey) Hashtbl.t
-  let table = Hashtbl.create 251
+  module H = Hashtbl.Make(T)
+  type value = T.t
+  let table = H.create 251
   let hashcons d =
-    try Hashtbl.find table d
+    try H.find table d
     with Not_found ->
-      let d_hc = {node = d; hkey = H.hash d}
-      in Hashtbl.add table d d_hc; d_hc
+      let d_hc = {node = d; hkey = T.hash d}
+      in H.add table d d_hc; d_hc
 end
 module H = Make(Term_node)
 

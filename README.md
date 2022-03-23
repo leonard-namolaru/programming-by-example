@@ -21,6 +21,7 @@ Ancien [site du cours par Ralf Treinen](http://www.irif.fr/~treinen/teaching/pfa
 - cours 3 : Structures fonctionnelles efficaces. [pdf](cours/cours3.handout.pdf), [pdf 4-par-page](cours/cours3.handout4.pdf), [fichiers exemples](cours/cours3.examples).
 - cours 4 : Evaluation paresseuse. [pdf](cours/cours4.handout.pdf), [pdf 4-par-page](cours/cours4.handout4.pdf), [fichiers exemples](cours/cours4.examples).
 - cours 5 : Queues revisitées, les vertues de la paresse. [pdf](cours/cours5.handout.pdf), [pdf 4-par-page](cours/cours5.handout4.pdf), [fichiers exemples](cours/cours5.examples).
+- cours 6 : Hashconsing. [pdf](cours/cours6.handout.pdf), [pdf 4-par-page](cours/cours6.handout4.pdf), [fichiers exemples](cours/cours6.examples).
 
 ### Projet
 

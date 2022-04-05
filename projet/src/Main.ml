@@ -35,5 +35,12 @@ let rec verification_chemins chemins_liste = match chemins_liste with
 let argv_list = Array.to_list Sys.argv
 let _ = if (verification_chemins (List.tl argv_list)) then print_string "paths ok !" else print_string "paths pbm !" ; print_newline ()
 
+let file_to_list fichier = let rec f liste input_channel = match input_line input_channel with
+                                                | next_line -> f (liste@[next_line]) input_channel
+                                                | exception End_of_file -> close_in input_channel ; liste
+in f [] (open_in fichier)
 
 
+
+let my_liste = file_to_list (List.nth (List.tl argv_list) 0)
+let _ = print_string (List.nth my_liste 0) ; print_newline ()

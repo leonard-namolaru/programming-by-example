@@ -48,7 +48,7 @@ let _ = if not (verification_chemins liste_fichiers) then
         else ()
 
 (* ============================================================================================================ *)
-(* ***** TRANSFORMER LES LISTES D'ENTRÉES (INPUTS) ET DE SORTIES (OUTPUTS) EN LISTES DE TYPE STRING LIST *****  *)
+(* ***** TRANSFORMER LES LISTES D'ENTRÉES (INPUTS) ET DE SORTIES (OUTPUTS) DANS LES FICHIERS , EN LISTES DE TYPE STRING LIST *****  *)
 (* ============================================================================================================ *)
         
 (* Une fonction qui reçoit en paramètre un fichier contenant une liste de inputs et renvoie une liste. Chaque cellule est l'une des entrées (inputs) *)       

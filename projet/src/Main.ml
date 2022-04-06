@@ -6,6 +6,8 @@
  *
  *)
 
+type mode_de_fonctionnement = | Fichier_input_output | Deux_fichiers
+
 (* Nombre de paramètres passés via la ligne de commande *)
 let argc = Array.length Sys.argv
 
@@ -60,3 +62,9 @@ let output_list = snd input_output_lists
 
 let _ = print_endline (List.nth input_list 0) ; print_endline (List.nth output_list 0)
 let _ = print_endline (List.nth input_list 1) ; print_endline (List.nth output_list 1)
+
+
+let mode = if argc = 2 then Fichier_input_output else Deux_fichiers
+let input_list2 = match mode with
+                   |Deux_fichiers -> input_file_to_list (List.nth liste_fichiers 1)
+                   |_ -> []

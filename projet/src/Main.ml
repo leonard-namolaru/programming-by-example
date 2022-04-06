@@ -3,7 +3,6 @@
  * genconcat <fichier> <fichier> : doit créer un programme Concat à partir du contenu du premier fichier
  *                                 (contenant des lignes "input output") puis utiliser ce programme sur
  *                                 le second fichier qui ne contiendra que des lignes "input"
- *
  *)
 
 type mode_de_fonctionnement = | Fichier_input_output | Deux_fichiers

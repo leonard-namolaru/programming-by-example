@@ -14,7 +14,7 @@ let argc = Array.length Sys.argv
 let _ =  if ((argc < 2) || (argc > 3)) then
             begin
                Printf.printf "Utilisation : %s <fichier> [<fichier>] \n%!" Sys.argv.(0) ;
-               Printf.printf "par exemple : %s ../exemples/etape1/date_to_month \n%!" Sys.argv.(0) ;
+               Printf.printf "par exemple : %s ../exemples/etape1/date_to_month [./'Exemples pour le second fichier'/identity] \n%!" Sys.argv.(0) ;
                exit 0;
             end
          else ()
@@ -67,3 +67,5 @@ let mode = if argc = 2 then Fichier_input_output else Deux_fichiers
 let input_list2 = match mode with
                    |Deux_fichiers -> input_file_to_list (List.nth liste_fichiers 1)
                    |_ -> []
+
+let _ = if (List.length input_list2 > 0) then print_endline (List.nth input_list2 0) else ()

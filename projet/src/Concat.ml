@@ -4,7 +4,8 @@ let forward i = i;;
 let backward i str = (String.length str) - i;;
 let extract str pos_initial pos_finale = String.sub str pos_initial (pos_finale  - pos_initial);;
 
-type operation = Const of string | Forward of int | Backward of int | Extract of int * int                                                                               
+type fb = Forward of int | Backward of int;;
+type operation = Const of string | Extract of int * int | Exctact of (fb * fb)                                                                                
 type dag = {nodes : string list; aretes: (string * string * operation) list };;
 let exemple = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",Const "d");("d","dx",Const "x");("dx","dxa",Const "a")]};;
 

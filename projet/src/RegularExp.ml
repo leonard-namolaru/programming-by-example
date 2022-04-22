@@ -49,15 +49,21 @@ let test_mot = "ocaML"
 let test_token = Plus Lower
 let _ = print_string (partie_max_mot_filtrage_par_token test_mot test_token)
 
-  
-
-
-
-
-(*
-let rec filtrage_mot_par_expression_reguliere mot:string expression:regexp = match expression with 
+(* Filtrage d’un mot par une expression reguliere *)
+let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) = match expression with 
                 |[] -> failwith "Une expression reguliere est une sequence non-vide de tokens"
                 (* Une expression reguliere consistuee d’un unique token t filtre un mot m lorsque t filtre m *)
                 |regexp_token::[] -> filtrage_mot_par_token mot regexp_token
                 |regexp_token::fin_regexp -> 
-*)
+                  let m1 = partie_max_mot_filtrage_par_token mot regexp_token 
+                    in let longueur_m2 = ((String.length mot) - (String.length m1)) in
+                      if longueur_m2 >= 1 
+                        then filtrage_mot_par_expression_reguliere (String.sub mot ((String.length m1)) longueur_m2) fin_regexp
+                      else
+                        false
+
+(* TEST *)
+let test_mot = "ocaML33"
+let test_expression = [Plus Lower ; Plus Upper ; Plus Numeric]
+let test_result = filtrage_mot_par_expression_reguliere test_mot test_expression
+let _ = if test_result then print_string "OK" else print_string "PBM"

@@ -34,7 +34,7 @@ let filtrage_mot_par_token mot regexp_token =
 let test_mot = "ocaml"
 let test_token = Plus Lower
 let test_result = filtrage_mot_par_token test_mot test_token
-let _ = if test_result then print_string "OK" else print_string "PBM"
+let _ = if test_result then print_endline "OK" else print_endline "PBM"
 
 (* La partie maximale d'un mot qui est filtrée par un token d'une expression régulière *)
 let rec partie_max_mot_filtrage_par_token mot regexp_token = 
@@ -47,7 +47,7 @@ let rec partie_max_mot_filtrage_par_token mot regexp_token =
 (* TEST *)
 let test_mot = "ocaML"
 let test_token = Plus Lower
-let _ = print_string (partie_max_mot_filtrage_par_token test_mot test_token)
+let _ = print_endline (partie_max_mot_filtrage_par_token test_mot test_token)
 
 (* Filtrage d’un mot par une expression reguliere *)
 let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) = match expression with 
@@ -66,4 +66,48 @@ let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) =
 let test_mot = "ocaML33"
 let test_expression = [Plus Lower ; Plus Upper ; Plus Numeric]
 let test_result = filtrage_mot_par_expression_reguliere test_mot test_expression
-let _ = if test_result then print_string "OK" else print_string "PBM"
+let _ = if test_result then print_endline "OK" else print_endline "PBM"
+
+(* le premier facteur de str qui est filtré par une expression reguliere *)
+let before (str:string) (expression:regexp) = 
+  let rec f index str expression =
+    match (String.length str) with
+      |0 -> -1
+      |_ -> if (not (filtrage_mot_par_expression_reguliere str expression))
+            then f (index + 1) (String.sub str 1 ((String.length str) - 1)) expression
+            else index
+          in f 0 str expression
+
+(* le dernier facteur de str qui est filtré par une expression reguliere *)
+let after (str:string) (expression:regexp) = 
+  let rec f index str expression =
+    match (String.length str) with
+      |0 -> -1
+      |_ -> if (not (filtrage_mot_par_expression_reguliere str expression))
+            then f (index - 1) (String.sub str 0 ((String.length str) - 1)) expression
+            else index + 1
+          in let before_result = before str expression in
+              match before_result with
+                |(-1) -> -1
+                |_ -> let before_str = String.sub str before_result ((String.length str) - before_result) in
+                          (f ((String.length before_str) - 1) before_str expression) + before_result
+
+(* TEST *)
+let test_expression = [Plus Lower ; Plus Upper ; Plus Numeric]
+
+let test_mot = "ocaML33t"
+let _ = print_int (before test_mot test_expression) ; print_char ',' ; print_int (after test_mot test_expression)
+let _ = print_newline ()
+
+let test_mot = "ocaML33"
+let _ = print_int (before test_mot test_expression) ; print_char ',' ; print_int (after test_mot test_expression)
+let _ = print_newline ()
+
+
+let test_mot = "+ocaML33"
+let _ = print_int (before test_mot test_expression) ; print_char ',' ; print_int (after test_mot test_expression)
+let _ = print_newline ()
+
+
+
+

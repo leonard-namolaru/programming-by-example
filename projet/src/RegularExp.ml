@@ -31,10 +31,10 @@ let filtrage_mot_par_token mot regexp_token =
                              | Neg nom_classe -> not (f mot nom_classe)
 
 (* TEST *)
-let test_mot = "ocaml"
-let test_token = Plus Lower
-let test_result = filtrage_mot_par_token test_mot test_token
-let _ = if test_result then print_endline "OK" else print_endline "PBM"
+let _ = print_endline (Bool.to_string (filtrage_mot_par_token "ocaml" (Plus Lower)))
+let _ = print_endline (Bool.to_string (filtrage_mot_par_token "." (Plus (Special '.'))))
+let _ = print_endline (Bool.to_string (filtrage_mot_par_token "." (Plus Alphanumeric)))
+
 
 (* La partie maximale d'un mot qui est filtrée par un token d'une expression régulière *)
 let rec partie_max_mot_filtrage_par_token mot regexp_token = 
@@ -45,13 +45,14 @@ let rec partie_max_mot_filtrage_par_token mot regexp_token =
           else mot
 
 (* TEST *)
-let test_mot = "ocaML"
-let test_token = Plus Lower
-let _ = print_endline (partie_max_mot_filtrage_par_token test_mot test_token)
+let _ = print_endline ((partie_max_mot_filtrage_par_token "ocaML" (Plus Lower)))
+let _ = print_endline ((partie_max_mot_filtrage_par_token "OCaml" (Plus Lower)))
+let _ = print_endline ((partie_max_mot_filtrage_par_token "ocAml" (Plus Lower)))
+let _ = print_endline ((partie_max_mot_filtrage_par_token "" (Plus Lower)))
 
 (* Filtrage d’un mot par une expression reguliere *)
 let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) = match expression with 
-                |[] -> failwith "Une expression reguliere est une sequence non-vide de tokens"
+                |[] -> false
                 (* Une expression reguliere consistuee d’un unique token t filtre un mot m lorsque t filtre m *)
                 |regexp_token::[] -> filtrage_mot_par_token mot regexp_token
                 |regexp_token::fin_regexp -> 
@@ -63,16 +64,9 @@ let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) =
                         false
 
 (* TEST *)
-let test_mot = "ocaML33"
-let test_expression = [Plus Lower ; Plus Upper ; Plus Numeric]
-let test_result = filtrage_mot_par_expression_reguliere test_mot test_expression
-let _ = if test_result then print_endline "OK" else print_endline "PBM"
-
-let test_mot = "ML33"
-let test_expression = [Plus Lower ; Plus Upper ; Plus Numeric]
-let test_result = filtrage_mot_par_expression_reguliere test_mot test_expression
-let _ = if test_result then print_endline "OK" else print_endline "PBM"
-
+let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "ocaML33" [Plus Lower ; Plus Upper ; Plus Numeric]))
+let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "ML33" [Plus Lower ; Plus Upper ; Plus Numeric]))
+let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "" []))
 
 (* le premier facteur de str qui est filtré par une expression reguliere *)
 let before (str:string) (expression:regexp) = 
@@ -120,7 +114,7 @@ let afterlast (str:string) (expression:regexp) =
 let beforelast (str:string) (expression:regexp) = 
   let rec f index str expression =
     match (String.length str) with
-      |0 -> -1
+      |0 -> index - 1
       |_ -> if (filtrage_mot_par_expression_reguliere str expression)
             then f (index + 1) (String.sub str 1 ((String.length str) - 1)) expression
             else index - 1
@@ -146,4 +140,19 @@ let _ = print_newline ()
 let test_mot = "+ocaML33"
 let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
 let _ = print_newline ()
+
+let test_expression = [Plus Lower]
+
+let test_mot = "ocaM"
+let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
+let _ = print_newline ()
+
+let test_mot = "oca"
+let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
+let _ = print_newline ()
+
+let test_mot = "+oca"
+let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
+let _ = print_newline ()
+
 

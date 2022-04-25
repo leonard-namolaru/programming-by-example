@@ -155,4 +155,33 @@ let test_mot = "+oca"
 let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
 let _ = print_newline ()
 
+(* Connaitre l’ensemble des expressions régulières qui filtrent str *) 
+(* Calcule de cette information de façon ascendante (bottom-up) en s’inspirant de la programmation dynamique *)
+
+(* TEST : Algo prog dynamique "Rendre la monnaie" en Ocaml *)
+type entier = |Entier of int |Infinity
+let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int list) =
+  let rec f index nb_type_de_pieces acc = match (index = (nb_type_de_pieces + 1))  with 
+                                           |true -> acc
+                                           |false -> f (index + 1) nb_type_de_pieces (acc@[[Entier 0]])
+
+  in let rec f2 index somme acc = match (index = somme), acc  with 
+                        |true,_ -> acc
+                        |false,(h::t) -> f2 (index + 1) somme ([(h@[Infinity])]@t) 
+                        |false,_ -> acc
+
+  in let rec f3 s i nb_type_de_pieces somme acc valeurs_de_pieces = 
+    let rec f4 s i nb_type_de_pieces somme acc valeurs_de_pieces = match (s = (nb_type_de_pieces + 1)), acc  with 
+                                    |true,_ -> acc
+                                    |false,(h::t) -> [(h@[Infinity])]@(f4 (s+1) i nb_type_de_pieces somme t valeurs_de_pieces)
+                                    |false,_ -> acc
+    
+    in match (i = somme), acc  with 
+                        |true,_ -> acc
+                        |false,(h::t) -> [(h@[Infinity])]@(f3 s (i + 1) nb_type_de_pieces somme (f4 0 i nb_type_de_pieces somme t valeurs_de_pieces) valeurs_de_pieces)
+                        |false,_ -> acc
+
+  in f3 0 0 nb_type_de_pieces somme (f2 0 somme (f 0 nb_type_de_pieces [])) valeurs_de_pieces
+
+let _ = rendre_la_monnaie 8 3 [1;4;6]
 

@@ -198,15 +198,18 @@ let _ = list_list_get (list_list_ajout_element_position_ligne_colonne [[1;3];[4;
 (* TEST : Traduction d'un algo prog dynamique "Rendre la monnaie" en Ocaml *)
 type entier = |Entier of int |Infinity
 
+let get_entier entier = match entier with |Entier x -> x |Infinity -> Int.max_int 
+let set_entier entier = Entier entier
+
 let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int list) =
   (* matrice[i, 0] = 0 ∀ i *) (* Faire la somme 0 avec les pièces de valeurs v1 ... vi ? il me faut combien de pièces ? 0 *)
   let rec cas_simple_1 index nb_type_de_pieces matrice  = match (index = (nb_type_de_pieces + 1))  with 
                                            |true -> matrice
-                                           |false -> cas_simple_1 (index + 1) nb_type_de_pieces (matrice@[[0]])
+                                           |false -> cas_simple_1 (index + 1) nb_type_de_pieces (matrice@[[set_entier 0]])
 
   (* matrice[0, s] = {0 si s = 0 , ∞ sinon *) (* Si je n’ai pas de pièces et on me demande de faire la somme S : je ne peux pas, (sauf si la somme est 0). *)
   in let rec cas_simple_2 s somme matrice = match (s = somme), matrice  with 
-                        |false,(h::t) -> cas_simple_2 (s + 1) somme ([(h@[999])]@t) 
+                        |false,(h::t) -> cas_simple_2 (s + 1) somme ([(h@[Infinity])]@t) 
                         |_,_-> matrice
 
   in let rec cas_general s i nb_type_de_pieces somme matrice valeurs_de_pieces = match (i = (nb_type_de_pieces + 1))  with
@@ -217,9 +220,9 @@ let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int
                 let valeur_piece_i = List.nth valeurs_de_pieces (i-1) in 
                   if (s >= valeur_piece_i) then 
                     begin
-                    let min_option1 = list_list_get matrice (i-1) s in 
-                    let min_option2 = 1 + (list_list_get matrice i (s - valeur_piece_i)) in
-                    let minimum = min min_option1 min_option2 in
+                    let min_option1 = get_entier (list_list_get matrice (i-1) s) in 
+                    let min_option2 = 1 + get_entier (list_list_get matrice i (s - valeur_piece_i)) in
+                    let minimum = set_entier (min min_option1 min_option2) in
                     cas_general (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne matrice minimum i s) valeurs_de_pieces
                     end
                   else 

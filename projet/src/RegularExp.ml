@@ -158,8 +158,43 @@ let _ = print_newline ()
 (* Connaitre l’ensemble des expressions régulières qui filtrent str *) 
 (* Calcule de cette information de façon ascendante (bottom-up) en s’inspirant de la programmation dynamique *)
 
+(* Fonction auxiliaire : Insère un élément à la position i dans une liste *)
+let list_ajout_element_position_i liste element i = 
+  let rec f liste element i counter = match liste with
+                                            |[] -> 
+                                              if (i == counter) 
+                                                then [element] 
+                                              else []
+                                            |head::tail ->
+                                              if (i == counter) 
+                                                then (element::liste)
+                                              else head::(f tail element i (counter + 1))
+  in f liste element i 0
+
+(* Fonction auxiliaire : Lorsqu'il s'agit d'une liste de listes (liste à deux dimensions), 
+la fonction nous permet d'ajouter un élément spécifique dans la ligne et la colonne de notre choix *)
+let list_list_ajout_element_position_ligne_colonne liste element ligne colonne =
+  let rec f liste element ligne colonne counter_ligne = match liste with 
+                                                     |[] -> if(ligne = counter_ligne)
+                                                               then if(colonne = 0)
+                                                                      then [[element]]
+                                                                    else []
+                                                            else []
+
+                                                    |head::tail -> if (ligne == counter_ligne)
+                                                                    then (list_ajout_element_position_i head element colonne)::tail
+                                                                  else head::(f tail element ligne colonne (counter_ligne + 1))
+  in f liste element ligne colonne 0
+
+
+(* Test *)
+let _ = list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1
+let _ = list_ajout_element_position_i [Infinity;Infinity] (Entier 3) 1 
+
+
 (* TEST : Algo prog dynamique "Rendre la monnaie" en Ocaml *)
 type entier = |Entier of int |Infinity
+
 let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int list) =
   let rec f index nb_type_de_pieces acc = match (index = (nb_type_de_pieces + 1))  with 
                                            |true -> acc
@@ -170,18 +205,14 @@ let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int
                         |false,(h::t) -> f2 (index + 1) somme ([(h@[Infinity])]@t) 
                         |false,_ -> acc
 
-  in let rec f3 s i nb_type_de_pieces somme acc valeurs_de_pieces = 
-    let rec f4 s i nb_type_de_pieces somme acc valeurs_de_pieces = match (s = (nb_type_de_pieces + 1)), acc  with 
-                                    |true,_ -> acc
-                                    |false,(h::t) -> [(h@[Infinity])]@(f4 (s+1) i nb_type_de_pieces somme t valeurs_de_pieces)
-                                    |false,_ -> acc
-    
-    in match (i = somme), acc  with 
-                        |true,_ -> acc
-                        |false,(h::t) -> [(h@[Infinity])]@(f3 s (i + 1) nb_type_de_pieces somme (f4 0 i nb_type_de_pieces somme t valeurs_de_pieces) valeurs_de_pieces)
-                        |false,_ -> acc
+  in let rec f3 s i nb_type_de_pieces somme acc valeurs_de_pieces = match (i = (nb_type_de_pieces + 1))  with
+                                                                  |true -> acc
+                                                                  |false -> match (s = (somme + 1) ) with
+                                                                            |true -> f3 1 (i + 1) nb_type_de_pieces somme acc valeurs_de_pieces
+                                                                            |false -> f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (Entier s) i s) valeurs_de_pieces
 
-  in f3 0 0 nb_type_de_pieces somme (f2 0 somme (f 0 nb_type_de_pieces [])) valeurs_de_pieces
+  in f3 1 1 nb_type_de_pieces somme (f2 0 somme (f 0 nb_type_de_pieces [])) valeurs_de_pieces
 
 let _ = rendre_la_monnaie 8 3 [1;4;6]
+
 

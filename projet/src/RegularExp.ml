@@ -186,6 +186,8 @@ let list_list_ajout_element_position_ligne_colonne liste element ligne colonne =
                                                                   else head::(f tail element ligne colonne (counter_ligne + 1))
   in f liste element ligne colonne 0
 
+(* Fonction auxiliaire : Pour une liste de listes (liste à deux dimensions), 
+la fonction permet d'obtenir un élément précis par numéro de ligne et numéro de colonne *)
 let list_list_get liste ligne colonne = ((List.nth (List.nth liste (ligne)) colonne))
 
 (* Test *)
@@ -193,29 +195,37 @@ let _ = list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1
 let _ = list_ajout_element_position_i [Infinity;Infinity] (Entier 3) 1 
 let _ = list_list_get (list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1) 0 1
 
-(* TEST : Algo prog dynamique "Rendre la monnaie" en Ocaml *)
+(* TEST : Traduction d'un algo prog dynamique "Rendre la monnaie" en Ocaml *)
 type entier = |Entier of int |Infinity
 
 let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int list) =
-  let rec f index nb_type_de_pieces acc = match (index = (nb_type_de_pieces + 1))  with 
-                                           |true -> acc
-                                           |false -> f (index + 1) nb_type_de_pieces (acc@[[0]])
+  (* matrice[i, 0] = 0 ∀ i *) (* Faire la somme 0 avec les pièces de valeurs v1 ... vi ? il me faut combien de pièces ? 0 *)
+  let rec cas_simple_1 index nb_type_de_pieces matrice  = match (index = (nb_type_de_pieces + 1))  with 
+                                           |true -> matrice
+                                           |false -> cas_simple_1 (index + 1) nb_type_de_pieces (matrice@[[0]])
 
-  in let rec f2 index somme acc = match (index = somme), acc  with 
-                        |true,_ -> acc
-                        |false,(h::t) -> f2 (index + 1) somme ([(h@[999])]@t) 
-                        |false,_ -> acc
+  (* matrice[0, s] = {0 si s = 0 , ∞ sinon *) (* Si je n’ai pas de pièces et on me demande de faire la somme S : je ne peux pas, (sauf si la somme est 0). *)
+  in let rec cas_simple_2 s somme matrice = match (s = somme), matrice  with 
+                        |false,(h::t) -> cas_simple_2 (s + 1) somme ([(h@[999])]@t) 
+                        |_,_-> matrice
 
-  in let rec f3 s i nb_type_de_pieces somme acc valeurs_de_pieces = match (i = (nb_type_de_pieces + 1))  with
-                                                                  |true -> acc
-                                                                  |false -> match (s = (somme + 1) ) with
-                                                                            |true -> f3 1 (i + 1) nb_type_de_pieces somme acc valeurs_de_pieces
-                                                                            |false ->
-                                                                               if (s >= (List.nth valeurs_de_pieces (i-1)))
-                                                                                  then f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (min (list_list_get acc (i-1) s) (1 + ((list_list_get acc i (s - List.nth valeurs_de_pieces (i - 1)))))) i s) valeurs_de_pieces
-                                                                              else f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (list_list_get acc (i-1) s) i s) valeurs_de_pieces
+  in let rec cas_general s i nb_type_de_pieces somme matrice valeurs_de_pieces = match (i = (nb_type_de_pieces + 1))  with
+    |true -> matrice
+    |false -> match (s = (somme + 1) ) with
+              |true -> cas_general 1 (i + 1) nb_type_de_pieces somme matrice valeurs_de_pieces
+              |false -> 
+                let valeur_piece_i = List.nth valeurs_de_pieces (i-1) in 
+                  if (s >= valeur_piece_i) then 
+                    begin
+                    let min_option1 = list_list_get matrice (i-1) s in 
+                    let min_option2 = 1 + (list_list_get matrice i (s - valeur_piece_i)) in
+                    let minimum = min min_option1 min_option2 in
+                    cas_general (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne matrice minimum i s) valeurs_de_pieces
+                    end
+                  else 
+                    cas_general (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne matrice (list_list_get matrice (i-1) s) i s) valeurs_de_pieces
 
-  in f3 1 1 nb_type_de_pieces somme (f2 0 somme (f 0 nb_type_de_pieces [])) valeurs_de_pieces
+  in cas_general 1 1 nb_type_de_pieces somme (cas_simple_2 0 somme (cas_simple_1 0 nb_type_de_pieces [])) valeurs_de_pieces
 
 let _ = rendre_la_monnaie 8 3 [1;4;6]
 

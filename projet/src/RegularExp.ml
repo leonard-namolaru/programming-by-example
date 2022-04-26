@@ -186,11 +186,12 @@ let list_list_ajout_element_position_ligne_colonne liste element ligne colonne =
                                                                   else head::(f tail element ligne colonne (counter_ligne + 1))
   in f liste element ligne colonne 0
 
+let list_list_get liste ligne colonne = ((List.nth (List.nth liste (ligne)) colonne))
 
 (* Test *)
 let _ = list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1
 let _ = list_ajout_element_position_i [Infinity;Infinity] (Entier 3) 1 
-
+let _ = list_list_get (list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1) 0 1
 
 (* TEST : Algo prog dynamique "Rendre la monnaie" en Ocaml *)
 type entier = |Entier of int |Infinity
@@ -198,18 +199,21 @@ type entier = |Entier of int |Infinity
 let rendre_la_monnaie (somme:int) (nb_type_de_pieces:int) (valeurs_de_pieces:int list) =
   let rec f index nb_type_de_pieces acc = match (index = (nb_type_de_pieces + 1))  with 
                                            |true -> acc
-                                           |false -> f (index + 1) nb_type_de_pieces (acc@[[Entier 0]])
+                                           |false -> f (index + 1) nb_type_de_pieces (acc@[[0]])
 
   in let rec f2 index somme acc = match (index = somme), acc  with 
                         |true,_ -> acc
-                        |false,(h::t) -> f2 (index + 1) somme ([(h@[Infinity])]@t) 
+                        |false,(h::t) -> f2 (index + 1) somme ([(h@[999])]@t) 
                         |false,_ -> acc
 
   in let rec f3 s i nb_type_de_pieces somme acc valeurs_de_pieces = match (i = (nb_type_de_pieces + 1))  with
                                                                   |true -> acc
                                                                   |false -> match (s = (somme + 1) ) with
                                                                             |true -> f3 1 (i + 1) nb_type_de_pieces somme acc valeurs_de_pieces
-                                                                            |false -> f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (Entier s) i s) valeurs_de_pieces
+                                                                            |false ->
+                                                                               if (s >= (List.nth valeurs_de_pieces (i-1)))
+                                                                                  then f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (min (list_list_get acc (i-1) s) (1 + ((list_list_get acc i (s - List.nth valeurs_de_pieces (i - 1)))))) i s) valeurs_de_pieces
+                                                                              else f3 (s+1) i nb_type_de_pieces somme (list_list_ajout_element_position_ligne_colonne acc (list_list_get acc (i-1) s) i s) valeurs_de_pieces
 
   in f3 1 1 nb_type_de_pieces somme (f2 0 somme (f 0 nb_type_de_pieces [])) valeurs_de_pieces
 

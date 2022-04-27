@@ -213,9 +213,9 @@ let ensemble_expressions_regulieres_filtrent_str (str:string) (tokens:token list
                 in construction_matrice (index_str + 1) index_token nb_type_de_tokens longeur_str (list_list_ajout_element_position_ligne_colonne matrice filtrage_resultat index_token index_str) tokens   
   
   
-  construction_matrice 0 0 (List.length tokens) (String.length str) [] tokens 
+  in construction_matrice 0 0 (List.length tokens) (String.length str) [] tokens 
 
-let _ = ensemble_expressions_regulieres_filtrent_str "ab8" [Plus Lower; Plus Alpha; Plus Alphanumeric ; Plus Numeric]
+let _ = ensemble_expressions_regulieres_filtrent_str "Ab8" [Plus Lower; Plus Alpha; Plus Alphanumeric ; Plus Numeric ; Plus Upper]
 
 
 (*

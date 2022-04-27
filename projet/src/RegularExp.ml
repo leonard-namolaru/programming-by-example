@@ -192,7 +192,7 @@ let list_list_get liste ligne colonne = ((List.nth (List.nth liste (ligne)) colo
 
 (* Test *)
 let _ = list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1
-let _ = list_ajout_element_position_i [Infinity;Infinity] (Entier 3) 1 
+let _ = list_ajout_element_position_i [1;3] (2) 1 
 let _ = list_list_get (list_list_ajout_element_position_ligne_colonne [[1;3];[4;5;6]] 2 0 1) 0 1
 
 (* ---------------------------------------------------------------------------- *)

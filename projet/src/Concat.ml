@@ -23,15 +23,22 @@ let evaluation_program program chaine =
                                                                   f t (string_resultat ^ resultat)
 in f program ""
 
+(* TEST *)
+let _ = evaluation_expression (Const "str") "str"
+let _ = evaluation_expression (Extract (Forward 1,Forward 2)) "str" (* resultat : t *) 
+
 (* test *)
 let x= [Const "s";Const "s"] 
 let _ = evaluation_program x "aymen"
 let y = [Extract (Forward 1,Forward 2);Extract (Forward 2,Forward 4)] 
 let _ =evaluation_program y "aymen"
 
-(* TEST *)
-let _ = evaluation_expression (Const "str") "str"
-let _ = evaluation_expression (Extract (Forward 1,Forward 2)) "str" (* resultat : t *)
+let z = [Const("Hello, "); Extract(Forward(3), Backward(7))] 
+let _ =evaluation_program y "Mr Smith junior"
+
+
+
+
 
 
 

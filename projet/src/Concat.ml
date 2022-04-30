@@ -14,20 +14,20 @@ let evaluation_expression expression chaine = match expression with
                                                                         |(Backward index1,Backward index2)  -> extract chaine(backward index1 chaine,backward index2 chaine)
                                                                         |(Forward index1,Backward index2)  -> extract chaine(forward index1,backward index2 chaine)
                                                                         |(Backward index1,Forward index2)  -> extract chaine (backward index1 chaine,forward index2)
-let evaluation_program program = 
-  let rec f program liste_resultat = match program with
-                                    |[] -> []
-                                    |(expression,chaine)::[] -> let resultat = (evaluation_expression expression chaine) in
-                                                                liste_resultat @ [resultat]
-                                    |(expression,chaine)::  t -> let resultat = (evaluation_expression expression chaine) in
-                                                                  f t (liste_resultat @ [resultat])
-in f program []
+let evaluation_program program chaine = 
+  let rec f program string_resultat = match program with
+                                    |[] -> ""
+                                    |expression::[] -> let resultat = (evaluation_expression expression chaine) in
+                                                        string_resultat ^ resultat
+                                    |expression::t -> let resultat = (evaluation_expression expression chaine) in
+                                                                  f t (string_resultat ^ resultat)
+in f program ""
 
 (* test *)
-let x= [(Const "aymen","aymen");(Const "Lenny","Lenny")]
-let _ = evaluation_program x
-let y = [((Extract (Forward 1,Forward 2)),"str");((Extract (Forward 2,Forward 4)),"aymen")]
-let _ =evaluation_program y
+let x= [Const "s";Const "s"] 
+let _ = evaluation_program x "aymen"
+let y = [Extract (Forward 1,Forward 2);Extract (Forward 2,Forward 4)] 
+let _ =evaluation_program y "aymen"
 
 (* TEST *)
 let _ = evaluation_expression (Const "str") "str"

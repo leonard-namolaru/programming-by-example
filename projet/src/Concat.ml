@@ -18,14 +18,16 @@ let evaluation_program program =
   let rec f program liste_resultat = match program with
                                     |[] -> []
                                     |(expression,chaine)::[] -> let resultat = (evaluation_expression expression chaine) in
-                                                                resultat::liste_resultat
+                                                                liste_resultat @ [resultat]
                                     |(expression,chaine)::  t -> let resultat = (evaluation_expression expression chaine) in
-                                                                  f t (resultat::liste_resultat)
+                                                                  f t (liste_resultat @ [resultat])
 in f program []
 
 (* test *)
 let x= [(Const "aymen","aymen");(Const "Lenny","Lenny")]
 let _ = evaluation_program x
+let y = [((Extract (Forward 1,Forward 2)),"str");((Extract (Forward 2,Forward 4)),"aymen")]
+let _ =evaluation_program y
 
 (* TEST *)
 let _ = evaluation_expression (Const "str") "str"

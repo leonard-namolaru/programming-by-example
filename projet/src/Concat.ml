@@ -53,3 +53,37 @@ let _ = ("a","b",Const "c")::exemple.aretes
 let ajouter_arete graph arete = {nodes = graph.nodes;aretes=arete::graph.aretes};;
 (*let exemple = ajouter_arete exemple ("a","b",Const  "a" );;*)
 (*let exemple = ajouter_arete exemple ("lenny","lenny",Extract (1,2))*)
+
+
+
+
+
+let string_to_nodes str = let rec f liste str = match String.length str with
+                         |0 -> liste
+                         |_ -> let nouveau_element = (List.nth liste ((List.length liste) - 1))^(String.sub str 0 1) in
+															 f (liste@[nouveau_element]) (String.sub str 1 ((String.length str) -1))
+	in f [""] str;;
+
+let string_sub_first str_source str_to_sub = let len = String.length str_to_sub in
+	String.sub str_source len ((String.length str_source) -len)
+
+let string_to_aretes str node_list= let rec f aretes_liste str node_list = match node_list with 
+                                               |[]-> aretes_liste
+																							 |h::t -> if h = str then f aretes_liste str t
+																								        else if (String.length h) = 1 
+																							          then 	let  nouveau_element = (str, h, Const h) in  f (aretes_liste@[nouveau_element]) str t
+																												else let  nouveau_element = (str, h, Const (string_sub_first h str)) in f (aretes_liste@[nouveau_element]) str t
+																							          
+	in f [] str node_list																						   
+																							
+let nodes_to_aretes nodes_liste = let rec f aretes_liste nodes_liste = match nodes_liste with
+                                                |[] -> aretes_liste
+                                                |h::[] -> aretes_liste
+                                                |h::t -> let aretes = string_to_aretes h t in
+																								         f (aretes_liste@aretes) t
+		in f [] nodes_liste
+
+let x = ["";"d";"dx";"dxa"]
+
+let _ = nodes_to_aretes x;;
+

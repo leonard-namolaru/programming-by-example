@@ -42,10 +42,10 @@ let _ =evaluation_program z "Mr Smith junior"
 mais dans les etiquettes d’un DAG, extract prend deux ensembles de pos expressions en arguments. *)
 type expression_dag = Const of string | Extract of (pos_expression * pos_expression) * (pos_expression * pos_expression) 
 
-type dag = {nodes : string list; aretes: (string * string * expression_dag) list }
+type dag = {nodes : string list; aretes: (string * string * expression_dag list) list }
 
  (* Exemple *)
-let _ = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",Const "d");("d","dx",Const "x");("dx","dxa",Const "a")]}
+let _ = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",[Const "d"]);("d","dx",[Const "x"]);("dx","dxa",[Const "a"])]}
 
 (* ******* *)
 
@@ -58,38 +58,6 @@ let string_to_nodes str = let rec f liste str = match String.length str with
 (* TEST *)
 let nodes_liste = string_to_nodes "dxa" (* string list = [""; "d"; "dx"; "dxa"] *)
 
-(* ******* *)
-
-let string_sub_first str_source str_to_sub = let len = String.length str_to_sub in
-	String.sub str_source len ((String.length str_source) -len)
-
-let string_to_aretes str node_list= let rec f aretes_liste str node_list = match node_list with 
-                                               |[]-> aretes_liste
-																							 |h::t -> if h = str then f aretes_liste str t
-																								        else if (String.length h) = 1 
-																							          then 	let  nouveau_element = (str, h, Const h) in  f (aretes_liste@[nouveau_element]) str t
-																												else let  nouveau_element = (str, h, Const (string_sub_first h str)) in f (aretes_liste@[nouveau_element]) str t
-																							          
-	in f [] str node_list																						   
-																							
-let nodes_to_aretes nodes_liste = let rec f aretes_liste nodes_liste = match nodes_liste with
-                                                |[] -> aretes_liste
-                                                |h::[] -> aretes_liste
-                                                |h::t -> let aretes = string_to_aretes h t in
-																								         f (aretes_liste@aretes) t
-		in f [] nodes_liste
-
-(* TEST *)
-let aretes_liste = nodes_to_aretes nodes_liste
-let dag_test = {nodes = nodes_liste ; aretes = aretes_liste}
-
-(* ******* *)
-
-let ajouter_arete graph arete = {nodes = graph.nodes ; aretes = arete::graph.aretes}
-
-(* ******* *)
-
-
 (* Une fonction qui renvoie l'index de la première occurrence de str2 dans str1 *)
 let index_of str1 str2 = 
 	let rec f index str1 str2 = match String.length str1 with
@@ -98,10 +66,10 @@ let index_of str1 str2 =
 																		           if not (verification) 
 																									then f (index + 1) (String.sub str1 1 ((String.length str1) -1)) str2 
 																							 else 
-																										if String.sub str1 0 (String.length str2) = str2
+																										if (String.length str1 >= String.length str2) && ((String.sub str1 0 (String.length str2)) = str2)
 																											then index
-																										else f (index + 1) (String.sub str1 1 ((String.length str1) -1)) str2 
-	in if (str2 > str1) then -1 else f 0 str1 str2
+																										else f (index + 1) (String.sub str1 1 ((String.length str1) -1)) str2
+	in if (String.length str2) > (String.length str1) then -1 else f 0 str1 str2
 	
 (* TEST *)
 let _ = index_of "abad" "a"
@@ -116,10 +84,10 @@ let indexes_of str1 str2 =
 																					then indexes_liste
 																				else 
 																					let index_continuite_recherche = prochain_index_of + (String.length str2) in
-																						if index_continuite_recherche >= (String.length str1)
+																						if index_continuite_recherche > (String.length str1)
 																							then indexes_liste
 																						else f (index + index_continuite_recherche) (indexes_liste@[index + prochain_index_of]) (String.sub str1 (index_continuite_recherche) ((String.length str1)- index_continuite_recherche)) str2
-	in if (str2 > str1) then [] else f 0 [] str1 str2  
+	in if (String.length str2) > (String.length str1) then [] else f 0 [] str1 str2  
 																					
 (* TEST *)
 let _ = indexes_of "abad" "a" (* int list = [0; 2] *)
@@ -134,9 +102,40 @@ let pos_expression_dag_of_indexes_liste indexes_liste str1 str2 =
 	
 (* TEST *)
 let _ = pos_expression_dag_of_indexes_liste [0;2] "abad" "a"
-(* expression_dag list =
-[Extract ((Forward 0, Backward 4), (Forward 1, Backward 3));
- Extract ((Forward 2, Backward 2), (Forward 3, Backward 1))] *)
-
+(* expression_dag list = [Extract ((Forward 0, Backward 4), (Forward 1, Backward 3)); Extract ((Forward 2, Backward 2), (Forward 3, Backward 1))] *)
 let _ = pos_expression_dag_of_indexes_liste [3] "abad" "d" 
 (* - : expression_dag list = [Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))] *)
+
+
+(* ******* *)
+
+let string_sub_first str_source str_to_sub = let len = String.length str_to_sub in
+	String.sub str_source len ((String.length str_source) -len)
+
+let string_to_aretes str1 str2 node_list= let rec f aretes_liste str1 str2 node_list = match node_list with 
+                                               |[]-> aretes_liste
+																							 |h::t -> if h = str2 then f aretes_liste str1 str2 t
+																								        else if (String.length h) = 1 
+																							          then let  nouveau_element = (str2, h, [Const h]@(pos_expression_dag_of_indexes_liste (indexes_of str1 h) str1 h)) in  f (aretes_liste@[nouveau_element]) str1 str2 t
+																												else let  nouveau_element = (str2, h, [Const (string_sub_first h str2)]@(pos_expression_dag_of_indexes_liste (indexes_of str1 (string_sub_first h str2)) str1 (string_sub_first h str2))) in f (aretes_liste@[nouveau_element]) str1 str2 t
+																							          
+	in f [] str1 str2 node_list																						   
+																							
+let nodes_to_aretes nodes_liste str1 str2 = let rec f aretes_liste nodes_liste str1 str2 = match nodes_liste with
+                                                |[] -> aretes_liste
+                                                |h::[] -> aretes_liste
+                                                |h::t -> let aretes = string_to_aretes str1 h t in
+																								         f (aretes_liste@aretes) t str1 str2
+		in f [] nodes_liste str1 str2
+
+(* TEST *)
+let aretes_liste = nodes_to_aretes nodes_liste "abad" "dxa"
+
+(* ******* *)
+
+(* Construction d'un graphe : representation d’un ensemble de programmes *)
+let cons_dag str1 str2 = let nodes_liste = string_to_nodes str2 in {nodes = nodes_liste ; aretes = nodes_to_aretes nodes_liste str1 str2}
+let _ = cons_dag "abad" "dxa"
+let _ = cons_dag "efegh" "ghxe"
+
+

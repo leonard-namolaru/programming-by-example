@@ -153,7 +153,7 @@ let ensemble_noeuds nodes_liste1 nodes_liste2 =
 	in f [] nodes_liste1 nodes_liste2 (List.nth nodes_liste1 ((List.length nodes_liste1) - 1)) (List.nth nodes_liste2 ((List.length nodes_liste2) - 1))
 	
 (* TEST *)
-let _ = ensemble_noeuds (string_to_nodes "dxa") (string_to_nodes "ghxe")
+let liste_ensemble_noeuds = ensemble_noeuds (string_to_nodes "dxa") (string_to_nodes "ghxe")
 (* (string * string) list = [("", ""); ("d", "g"); ("dx", "gh"); ("dxa", "ghx"); ("dxa", "ghxe")] *)
 
 (* Une fonction qui permet de trouver une arrete compte tenu de ses 2 noeuds *)
@@ -163,3 +163,48 @@ let rec get_arete aretes_liste node1 node2 = match aretes_liste with
 																																													else
 																																														get_arete t node1 node2
 																		|[] -> (node1 , node2 , []) 
+
+(* TEST *)
+let _ = get_arete aretes_liste "" "d"
+(* - : string * string * expression_dag list =
+("", "d", [Const "d"; Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))]) *)
+
+let rec expression_dag_comparaison expression1 expression2 = match expression1,expression2 with
+          |Const str1,Const str2 -> (str1 = str2)
+				  |Extract ((Forward num1a,Backward num2a),(Forward num3a, Backward num4a)) , Extract ((Forward num1b, Backward num2b),(Forward num3b, Backward num4b))
+					-> (num1a = num1b) && (num2a = num2b) && (num3a = num3b) && (num4a = num4b)
+					| _ -> false 
+
+(* TEST *)
+let _ = expression_dag_comparaison (Const "x") (Const "y")
+let _ = expression_dag_comparaison (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) ) (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) )
+let _ = expression_dag_comparaison (Const "x") (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) )
+
+(* let arretes_partie_commune arrete1 arrete2 =  
+	let rec f partie_commune expression_dag_liste1 expression_dag_liste2 = match expression_dag_liste1,expression_dag_liste2 with 
+	        	|[],[] -> nodes_intersection
+						|h1::t1,h2::t2 -> f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
+						|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
+						|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
+
+	                        |[],[] ->  partie_commune
+													|(Const str1)::[], (Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] (Const str1) t2
+														                                     else f partie_commune (Const str1) t2
+												  |(Const str1)::t1,(Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] t1 t2
+																																else f partie_commune t1 t2
+
+	                        |(Const str1)::t1,(Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] t1 t2
+																																else f partie_commune t1 t2
+*)
+(*
+let ensemble_aretes liste_ensemble_noeuds liste_aretes1 liste_aretes2 = 
+	let rec f aretes_intersection liste_aretes1 liste_aretes2 = match liste_aretes1,liste_aretes2 with
+	                    |[],[]         -> aretes_intersection
+											|h1::t1,h2::t2 -> 
+															 																
+																																
+																																f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
+																															|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
+																															|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
+	in f [] nodes_liste1 nodes_liste2 (List.nth nodes_liste1 ((List.length nodes_liste1) - 1)) (List.nth nodes_liste2 ((List.length nodes_liste2) - 1))
+*)

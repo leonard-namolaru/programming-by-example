@@ -81,6 +81,42 @@ let dag_test = {nodes = nodes_liste ; aretes = aretes_liste}
 
 (* ******* *)
 
-let ajouter_arete graph arete = {nodes = graph.nodes ; aretes=arete::graph.aretes}
+let ajouter_arete graph arete = {nodes = graph.nodes ; aretes = arete::graph.aretes}
 
 (* ******* *)
+
+
+(* Une fonction qui renvoie l'index de la première occurrence de str2 dans str1 *)
+let index_of str1 str2 = 
+	let rec f index str1 str2 = match String.length str1 with
+	                                   |0 -> -1
+																		 |_ ->  let verification = (String.get str1 0) =  (String.get str2 0) in
+																		           if not (verification) 
+																									then f (index + 1) (String.sub str1 1 ((String.length str1) -1)) str2 
+																							 else 
+																										if String.sub str1 0 (String.length str2) = str2
+																											then index
+																										else f (index + 1) (String.sub str1 1 ((String.length str1) -1)) str2 
+	in if (str2 > str1) then -1 else f 0 str1 str2
+	
+(* TEST *)
+let _ = index_of "abad" "a"
+let _ = index_of "abad" "z" (* -1 *)
+
+(* Une fonction qui renvoie une liste de tous les emplacements de str2 dans str1. *)
+let indexes_of str1 str2 = 
+	let rec f index indexes_liste str1 str2 = match String.length str1 with
+	                            |0 -> indexes_liste
+															|_ -> let prochain_index_of = index_of str1 str2 in
+															          if prochain_index_of = -1 
+																					then indexes_liste
+																				else 
+																					let index_continuite_recherche = prochain_index_of + (String.length str2) in
+																						if index_continuite_recherche >= (String.length str1)
+																							then indexes_liste
+																						else f (index + index_continuite_recherche) (indexes_liste@[index + prochain_index_of]) (String.sub str1 (index_continuite_recherche) ((String.length str1)- index_continuite_recherche)) str2
+	in if (str2 > str1) then [] else f 0 [] str1 str2  
+																					
+(* TEST *)
+let _ = indexes_of "abad" "a" (* int list = [0; 2] *)
+let _ = indexes_of "abad" "7" (* int list = [] *)

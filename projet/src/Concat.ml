@@ -138,4 +138,28 @@ let cons_dag str1 str2 = let nodes_liste = string_to_nodes str2 in {nodes = node
 let _ = cons_dag "abad" "dxa"
 let _ = cons_dag "efegh" "ghxe"
 
+let dag1 = cons_dag "10/10/2017" "10"
+let dag2 = cons_dag "05-15-2015" "15"
 
+(* Intersection de deux ensembles *)
+type intersection_dag = {nodes : string*string list; aretes: (string * string * expression_dag list) list }
+
+let ensemble_noeuds nodes_liste1 nodes_liste2 = 
+	let rec f nodes_intersection nodes_liste1 nodes_liste2 str1 str2 = match nodes_liste1,nodes_liste2 with
+	                                                            |[],[] -> nodes_intersection
+																															|h1::t1,h2::t2 -> f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
+																															|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
+																															|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
+	in f [] nodes_liste1 nodes_liste2 (List.nth nodes_liste1 ((List.length nodes_liste1) - 1)) (List.nth nodes_liste2 ((List.length nodes_liste2) - 1))
+	
+(* TEST *)
+let _ = ensemble_noeuds (string_to_nodes "dxa") (string_to_nodes "ghxe")
+(* (string * string) list = [("", ""); ("d", "g"); ("dx", "gh"); ("dxa", "ghx"); ("dxa", "ghxe")] *)
+
+(* Une fonction qui permet de trouver une arrete compte tenu de ses 2 noeuds *)
+let rec get_arete aretes_liste node1 node2 = match aretes_liste with
+                                    |(node_debut , node_fin , expression_dag_liste)::t -> if (node_debut = node1) && (node_fin = node2)
+																	                                                          then (node_debut , node_fin , expression_dag_liste)
+																																													else
+																																														get_arete t node1 node2
+																		|[] -> (node1 , node2 , []) 

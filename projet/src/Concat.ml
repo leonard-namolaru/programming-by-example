@@ -1,5 +1,5 @@
 type pos_expression = Forward of int | Backward of int
-type expression = Const of string | Extract of pos_expression * pos_expression
+type expression = Const of string | Extract of pos_expression * pos_expression 
 type program = expression list
 
 let const str = str
@@ -169,33 +169,38 @@ let _ = get_arete aretes_liste "" "d"
 (* - : string * string * expression_dag list =
 ("", "d", [Const "d"; Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))]) *)
 
-let rec expression_dag_comparaison expression1 expression2 = match expression1,expression2 with
-          |Const str1,Const str2 -> (str1 = str2)
+let expression_dag_extraire_partie_identique (expression1:expression_dag) (expression2:expression_dag) : expression option = match expression1,expression2 with
+          |Const str1,Const str2 -> if (str1 = str2) then Some (Const str1) else None
 				  |Extract ((Forward num1a,Backward num2a),(Forward num3a, Backward num4a)) , Extract ((Forward num1b, Backward num2b),(Forward num3b, Backward num4b))
-					-> (num1a = num1b) && (num2a = num2b) && (num3a = num3b) && (num4a = num4b)
-					| _ -> false 
+					         -> if (num1a = num1b) && (num3a = num3b) then  Some (Extract (Forward num1a,Forward num3a)) 
+									    else if (num2a = num2b) && (num4a = num4b) then Some (Extract (Backward num2a,Backward num4a))
+											else if (num2a = num2b) && (num3a = num3b) then Some (Extract (Backward num2a,Forward num3a))
+											else if (num1a = num1b) && (num4a = num4b) then Some (Extract (Forward num1a,Backward num4a))
+											else None
+					|_,_ -> None
 
 (* TEST *)
-let _ = expression_dag_comparaison (Const "x") (Const "y")
-let _ = expression_dag_comparaison (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) ) (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) )
-let _ = expression_dag_comparaison (Const "x") (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) )
+let _ = expression_dag_extraire_partie_identique (Const "x") (Const "y")
+let _ = expression_dag_extraire_partie_identique (Extract ((Forward 3, Backward 1), (Forward 4, Backward 0)) ) (Extract ((Forward 3, Backward 2), (Forward 4, Backward 1)) )
+let _ = expression_dag_extraire_partie_identique (Extract ((Forward 3, Backward 1), (Forward 4, Backward 0)) ) (Extract ((Forward 3, Backward 2), (Forward 0, Backward 4)) )
+let _ = expression_dag_extraire_partie_identique (Const "x") (Extract ((Forward 1, Backward 2),(Forward 3, Backward 4)) )
 
-(* let arretes_partie_commune arrete1 arrete2 =  
-	let rec f partie_commune expression_dag_liste1 expression_dag_liste2 = match expression_dag_liste1,expression_dag_liste2 with 
-	        	|[],[] -> nodes_intersection
-						|h1::t1,h2::t2 -> f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
-						|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
-						|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
+(* **** *)
 
-	                        |[],[] ->  partie_commune
-													|(Const str1)::[], (Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] (Const str1) t2
-														                                     else f partie_commune (Const str1) t2
-												  |(Const str1)::t1,(Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] t1 t2
-																																else f partie_commune t1 t2
+let arretes_partie_commune arrete1 arrete2 =  
+	let rec f partie_commune expression_dag_liste1 expression_dag_liste2 = match expression_dag_liste1 with 
+	        	|[] -> partie_commune
+						|h::t -> let extraire_partie_identique = List.find_opt (fun element_liste -> Option.is_some element_liste) (List.map (fun element_liste -> expression_dag_extraire_partie_identique h element_liste) expression_dag_liste2) in
+						           if Option.is_some extraire_partie_identique then f (partie_commune@[Option.get extraire_partie_identique]) t expression_dag_liste2
+											 else f partie_commune t expression_dag_liste2
+											
+	in match arrete1,arrete2 with (node_debut1 , node_fin1 , expression_dag_liste1),(node_debut2 , node_fin2 , expression_dag_liste2) -> 
+		f [] expression_dag_liste1 expression_dag_liste2
+							
+(* TEST *)							
+let _ = arretes_partie_commune ("", "d",[Const "d"; Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))])	("", "g",[Const "g"; Extract ((Forward 3, Backward 2), (Forward 4, Backward 1))])					
+(* - : expression option list = [Some (Extract (Forward 3, Forward 4))] *)
 
-	                        |(Const str1)::t1,(Const str2)::t2 -> if (str1 = str2) then f partie_commune@[Const str1] t1 t2
-																																else f partie_commune t1 t2
-*)
 (*
 let ensemble_aretes liste_ensemble_noeuds liste_aretes1 liste_aretes2 = 
 	let rec f aretes_intersection liste_aretes1 liste_aretes2 = match liste_aretes1,liste_aretes2 with

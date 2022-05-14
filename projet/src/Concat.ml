@@ -27,42 +27,34 @@ in f program ""
 let _ = evaluation_expression (Const "str") "str"
 let _ = evaluation_expression (Extract (Forward 1,Forward 2)) "str" (* resultat : t *) 
 
-(* test *)
+(* TEST *)
 let x= [Const "s";Const "s"] 
 let _ = evaluation_program x "aymen"
 let y = [Extract (Forward 1,Forward 2);Extract (Forward 2,Forward 4)] 
 let _ =evaluation_program y "aymen"
 
 let z = [Const("Hello, "); Extract(Forward(3), Backward(7))] 
-let _ =evaluation_program y "Mr Smith junior"
+let _ =evaluation_program z "Mr Smith junior"
 
+(* ******* *)
 
+type dag = {nodes : string list; aretes: (string * string * expression) list }
 
+ (* Exemple *)
+let _ = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",Const "d");("d","dx",Const "x");("dx","dxa",Const "a")]}
 
-
-
-
-type fb = Forward of int | Backward of int;;
-type operation = Const of string | Extract of int * int | Exctact of (fb * fb)                                                                                
-type dag = {nodes : string list; aretes: (string * string * operation) list }
-let exemple = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",Const "d");("d","dx",Const "x");("dx","dxa",Const "a")]}
-
-let _ = ("a","b",Const "c")::exemple.aretes
-
-
-let ajouter_arete graph arete = {nodes = graph.nodes;aretes=arete::graph.aretes};;
-(*let exemple = ajouter_arete exemple ("a","b",Const  "a" );;*)
-(*let exemple = ajouter_arete exemple ("lenny","lenny",Extract (1,2))*)
-
-
-
-
+(* ******* *)
 
 let string_to_nodes str = let rec f liste str = match String.length str with
                          |0 -> liste
                          |_ -> let nouveau_element = (List.nth liste ((List.length liste) - 1))^(String.sub str 0 1) in
 															 f (liste@[nouveau_element]) (String.sub str 1 ((String.length str) -1))
 	in f [""] str;;
+
+(* TEST *)
+let nodes_liste = string_to_nodes "dxa" (* string list = [""; "d"; "dx"; "dxa"] *)
+
+(* ******* *)
 
 let string_sub_first str_source str_to_sub = let len = String.length str_to_sub in
 	String.sub str_source len ((String.length str_source) -len)
@@ -83,7 +75,12 @@ let nodes_to_aretes nodes_liste = let rec f aretes_liste nodes_liste = match nod
 																								         f (aretes_liste@aretes) t
 		in f [] nodes_liste
 
-let x = ["";"d";"dx";"dxa"]
+(* TEST *)
+let aretes_liste = nodes_to_aretes nodes_liste
+let dag_test = {nodes = nodes_liste ; aretes = aretes_liste}
 
-let _ = nodes_to_aretes x;;
+(* ******* *)
 
+let ajouter_arete graph arete = {nodes = graph.nodes ; aretes=arete::graph.aretes}
+
+(* ******* *)

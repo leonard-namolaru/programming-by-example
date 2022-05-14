@@ -38,7 +38,11 @@ let _ =evaluation_program z "Mr Smith junior"
 
 (* ******* *)
 
-type dag = {nodes : string list; aretes: (string * string * expression) list }
+(* dans la syntaxe abstraite de Concat, extract prend deux pos expressions en arguments,
+mais dans les etiquettes d’un DAG, extract prend deux ensembles de pos expressions en arguments. *)
+type expression_dag = Const of string | Extract of (pos_expression * pos_expression) * (pos_expression * pos_expression) 
+
+type dag = {nodes : string list; aretes: (string * string * expression_dag) list }
 
  (* Exemple *)
 let _ = {nodes = ["";"d";"dx";"dxa"]; aretes =[("","d",Const "d");("d","dx",Const "x");("dx","dxa",Const "a")]}
@@ -120,3 +124,19 @@ let indexes_of str1 str2 =
 (* TEST *)
 let _ = indexes_of "abad" "a" (* int list = [0; 2] *)
 let _ = indexes_of "abad" "7" (* int list = [] *)
+
+let pos_expression_dag_of_indexes_liste indexes_liste str1 str2 = 
+	let rec f pos_expression_liste indexes_liste str1_len str2_len = match indexes_liste with 
+																										|[] -> pos_expression_liste
+																										|h::t -> let expression = Extract ((Forward h,Backward (str1_len - h)),(Forward (h + str2_len),Backward (str1_len - (h + str2_len)))) in 
+																										         f (pos_expression_liste@[expression]) t str1_len str2_len
+	in f [] indexes_liste (String.length str1) (String.length str2)
+	
+(* TEST *)
+let _ = pos_expression_dag_of_indexes_liste [0;2] "abad" "a"
+(* expression_dag list =
+[Extract ((Forward 0, Backward 4), (Forward 1, Backward 3));
+ Extract ((Forward 2, Backward 2), (Forward 3, Backward 1))] *)
+
+let _ = pos_expression_dag_of_indexes_liste [3] "abad" "d" 
+(* - : expression_dag list = [Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))] *)

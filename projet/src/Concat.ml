@@ -142,19 +142,30 @@ let dag1 = cons_dag "10/10/2017" "10"
 let dag2 = cons_dag "05-15-2015" "15"
 
 (* Intersection de deux ensembles *)
-type intersection_dag = {nodes : string*string list; aretes: (string * string * expression_dag list) list }
+type intersection_dag = {nodes : string*string list; aretes: ((string*string) * (string*string) * expression_dag list) list }
+
+let ensemble_noeuds2 h1 nodes_liste2 = 
+	let rec f nodes_intersection h1 nodes_liste2 = match nodes_liste2 with
+																															|h2::t2 -> f (nodes_intersection@[(h1,h2)]) h1 t2 
+																															|[] -> nodes_intersection
+																																
+	in f [] h1 nodes_liste2
 
 let ensemble_noeuds nodes_liste1 nodes_liste2 = 
-	let rec f nodes_intersection nodes_liste1 nodes_liste2 str1 str2 = match nodes_liste1,nodes_liste2 with
-	                                                            |[],[] -> nodes_intersection
-																															|h1::t1,h2::t2 -> f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
-																															|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
-																															|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
-	in f [] nodes_liste1 nodes_liste2 (List.nth nodes_liste1 ((List.length nodes_liste1) - 1)) (List.nth nodes_liste2 ((List.length nodes_liste2) - 1))
+	let rec f nodes_intersection nodes_liste1 nodes_liste2 = match nodes_liste1 with
+																															|h1::t1 -> f (nodes_intersection@(ensemble_noeuds2 h1 nodes_liste2)) t1 nodes_liste2 
+																															|[] -> nodes_intersection
+																																
+	in f [] nodes_liste1 nodes_liste2
 	
 (* TEST *)
 let liste_ensemble_noeuds = ensemble_noeuds (string_to_nodes "dxa") (string_to_nodes "ghxe")
-(* (string * string) list = [("", ""); ("d", "g"); ("dx", "gh"); ("dxa", "ghx"); ("dxa", "ghxe")] *)
+(* (string * string) list = 
+  [("", ""); ("", "g"); ("", "gh"); ("", "ghx"); ("", "ghxe"); ("d", "");
+   ("d", "g"); ("d", "gh"); ("d", "ghx"); ("d", "ghxe"); ("dx", "");
+   ("dx", "g"); ("dx", "gh"); ("dx", "ghx"); ("dx", "ghxe"); ("dxa", "");
+   ("dxa", "g"); ("dxa", "gh"); ("dxa", "ghx"); ("dxa", "ghxe")]
+ *)
 
 (* Une fonction qui permet de trouver une arrete compte tenu de ses 2 noeuds *)
 let rec get_arete aretes_liste node1 node2 = match aretes_liste with
@@ -195,21 +206,21 @@ let arretes_partie_commune arrete1 arrete2 =
 											 else f partie_commune t expression_dag_liste2
 											
 	in match arrete1,arrete2 with (node_debut1 , node_fin1 , expression_dag_liste1),(node_debut2 , node_fin2 , expression_dag_liste2) -> 
-		f [] expression_dag_liste1 expression_dag_liste2
-							
+		match (f [] expression_dag_liste1 expression_dag_liste2) with
+		     |[] -> None
+				 |h::t -> let extraire_extract = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Extract (x1,x2)): expression) -> true |_ -> false else false) (h::t) in
+				            if Option.is_some extraire_extract then Option.get extraire_extract
+										else let extraire_const = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Const x): expression) -> true |_ -> false else false) (h::t) in
+										if Option.is_some extraire_const then Option.get extraire_const
+										else None
 (* TEST *)							
 let _ = arretes_partie_commune ("", "d",[Const "d"; Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))])	("", "g",[Const "g"; Extract ((Forward 3, Backward 2), (Forward 4, Backward 1))])					
-(* - : expression option list = [Some (Extract (Forward 3, Forward 4))] *)
+(* - : expression option = Some (Extract (Forward 3, Forward 4)) *)
 
 (*
-let ensemble_aretes liste_ensemble_noeuds liste_aretes1 liste_aretes2 = 
-	let rec f aretes_intersection liste_aretes1 liste_aretes2 = match liste_aretes1,liste_aretes2 with
-	                    |[],[]         -> aretes_intersection
-											|h1::t1,h2::t2 -> 
-															 																
-																																
-																																f (nodes_intersection@[(h1,h2)]) t1 t2 str1 str2
-																															|h1::t1,[] ->     f (nodes_intersection@[(h1,str2)]) t1 [] str1 str2
-																															|[],h2::t2 ->   f (nodes_intersection@[(str1,h2)]) [] t2 str1 str2
-	in f [] nodes_liste1 nodes_liste2 (List.nth nodes_liste1 ((List.length nodes_liste1) - 1)) (List.nth nodes_liste2 ((List.length nodes_liste2) - 1))
-*)
+let ensemble_dag liste_ensemble_noeuds liste_aretes1 liste_aretes2 = 
+	let rec f nodes_nouvelle_intersection aretes_intersection liste_ensemble_noeuds liste_aretes1 liste_aretes2 = match liste_ensemble_noeuds with
+	                    |[]        -> {nodes = nodes_nouvelle_intersection ; aretes = aretes_intersection}
+											|(i1,j1),(i2,j2)::t -> let arrete_commune = arretes_partie_commune (get_arete liste_aretes1 i1 i2) (get_arete liste_aretes2 j1 j2) in true
+	in f [] [] liste_ensemble_noeuds liste_aretes1 liste_aretes2
+	*)

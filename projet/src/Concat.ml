@@ -135,14 +135,14 @@ let aretes_liste = nodes_to_aretes nodes_liste "abad" "dxa"
 
 (* Construction d'un graphe : representation d’un ensemble de programmes *)
 let cons_dag str1 str2 = let nodes_liste = string_to_nodes str2 in {nodes = nodes_liste ; aretes = nodes_to_aretes nodes_liste str1 str2}
-let _ = cons_dag "abad" "dxa"
-let _ = cons_dag "efegh" "ghxe"
+let dag1 = cons_dag "abad" "dxa"
+let dag2 = cons_dag "efegh" "ghxe"
 
-let dag1 = cons_dag "10/10/2017" "10"
-let dag2 = cons_dag "05-15-2015" "15"
+let _ = cons_dag "10/10/2017" "10"
+let _ = cons_dag "05-15-2015" "15"
 
 (* Intersection de deux ensembles *)
-type intersection_dag = {nodes : string*string list; aretes: ((string*string) * (string*string) * expression_dag list) list }
+type intersection_dag = {nodes : (string*string) list; aretes: ((string*string) * (string*string) * expression list) list }
 
 let ensemble_noeuds2 h1 nodes_liste2 = 
 	let rec f nodes_intersection h1 nodes_liste2 = match nodes_liste2 with
@@ -217,10 +217,38 @@ let arretes_partie_commune arrete1 arrete2 =
 let _ = arretes_partie_commune ("", "d",[Const "d"; Extract ((Forward 3, Backward 1), (Forward 4, Backward 0))])	("", "g",[Const "g"; Extract ((Forward 3, Backward 2), (Forward 4, Backward 1))])					
 (* - : expression option = Some (Extract (Forward 3, Forward 4)) *)
 
-(*
+let ensemble_dag2 noeud liste_ensemble_noeuds liste_aretes1 liste_aretes2  = 
+	let rec f nodes_nouvelle_intersection aretes_intersection (i1,j1) liste_ensemble_noeuds liste_aretes1 liste_aretes2 = match liste_ensemble_noeuds with
+	                    |[] -> {nodes = nodes_nouvelle_intersection ; aretes = aretes_intersection}
+	                    |(i2,j2)::[] -> let arrete_commune = arretes_partie_commune (get_arete liste_aretes1 i1 i2) (get_arete liste_aretes2 j1 j2) in 
+																			 if Option.is_some arrete_commune 
+												                   then {nodes = ((nodes_nouvelle_intersection@[(i1,j1)])@[(i2,j2)]) ; aretes = (aretes_intersection@[((i1,j1), (i2,j2), [Option.get arrete_commune])]) } 
+																					 else {nodes = nodes_nouvelle_intersection ; aretes = aretes_intersection}
+											|(i2,j2)::t -> let arrete_commune = arretes_partie_commune (get_arete liste_aretes1 i1 i2) (get_arete liste_aretes2 j1 j2) in 
+											                       if Option.is_some arrete_commune 
+																					      then f ((nodes_nouvelle_intersection@[i1,j1])@[i2,j2]) (aretes_intersection@[((i1,j1), (i2,j2), [Option.get arrete_commune])]) (i1,j1) t liste_aretes1 liste_aretes2
+																								else f nodes_nouvelle_intersection aretes_intersection (i1,j1) t liste_aretes1 liste_aretes2
+	in f [] [] noeud liste_ensemble_noeuds liste_aretes1 liste_aretes2
+
 let ensemble_dag liste_ensemble_noeuds liste_aretes1 liste_aretes2 = 
-	let rec f nodes_nouvelle_intersection aretes_intersection liste_ensemble_noeuds liste_aretes1 liste_aretes2 = match liste_ensemble_noeuds with
+	let rec f nodes_nouvelle_intersection aretes_intersection liste_ensemble_noeuds1 liste_ensemble_noeuds2 liste_aretes1 liste_aretes2 = match liste_ensemble_noeuds1 with
 	                    |[]        -> {nodes = nodes_nouvelle_intersection ; aretes = aretes_intersection}
-											|(i1,j1),(i2,j2)::t -> let arrete_commune = arretes_partie_commune (get_arete liste_aretes1 i1 i2) (get_arete liste_aretes2 j1 j2) in true
-	in f [] [] liste_ensemble_noeuds liste_aretes1 liste_aretes2
-	*)
+											|(node1,nod2)::t -> let dag_commune = ensemble_dag2 (node1,nod2) liste_ensemble_noeuds2 liste_aretes1 liste_aretes2 in 
+																				 f (nodes_nouvelle_intersection@dag_commune.nodes) (aretes_intersection@dag_commune.aretes) t liste_ensemble_noeuds2 liste_aretes1 liste_aretes2
+	in f [] [] liste_ensemble_noeuds liste_ensemble_noeuds liste_aretes1 liste_aretes2
+
+(* TEST *)
+let ensemble_dag_test = ensemble_dag liste_ensemble_noeuds dag1.aretes dag2.aretes
+(* val ensemble_dag_test : intersection_dag =
+  {nodes =
+    [("", ""); ("d", "g"); ("", ""); ("d", "gh"); ("", "g"); ("d", "gh");
+     ("d", "gh"); ("dx", "ghx"); ("dx", ""); ("dxa", "g"); ("dx", "ghx");
+     ("dxa", "ghxe")];
+   aretes =
+    [(("", ""), ("d", "g"), [Extract (Forward 3, Forward 4)]);
+     (("", ""), ("d", "gh"), [Extract (Forward 3, Backward 0)]);
+     (("", "g"), ("d", "gh"), [Extract (Backward 1, Backward 0)]);
+     (("d", "gh"), ("dx", "ghx"), [Const "x"]);
+     (("dx", ""), ("dxa", "g"), [Extract (Backward 2, Backward 1)]);
+     (("dx", "ghx"), ("dxa", "ghxe"), [Extract (Forward 0, Forward 1)])]}
+*) 

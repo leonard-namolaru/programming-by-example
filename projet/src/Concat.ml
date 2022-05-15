@@ -252,3 +252,77 @@ let ensemble_dag_test = ensemble_dag liste_ensemble_noeuds dag1.aretes dag2.aret
      (("dx", ""), ("dxa", "g"), [Extract (Backward 2, Backward 1)]);
      (("dx", "ghx"), ("dxa", "ghxe"), [Extract (Forward 0, Forward 1)])]}
 *) 
+
+(* **** *)
+
+let rec get_arete_suivante aretes_liste node_fin_i node_fin_j
+   = match aretes_liste with
+   |((i1,j1), (i2,j2), expression_liste)::t -> 
+		  if (i1 = node_fin_i) && (j1 = node_fin_j)
+				 then Some ((i1,j1) , (i2,j2) , expression_liste)
+			else
+					get_arete_suivante t node_fin_i node_fin_j
+	 |[] -> None
+
+(* TEST *)
+let _ = get_arete_suivante ensemble_dag_test.aretes "d" "gh"
+(* Some (("d", "gh"), ("dx", "ghx"), [Const "x"]) *)
+let _ = get_arete_suivante ensemble_dag_test.aretes "d" "g"
+(* None *)
+
+let rec get_arete_precedente aretes_liste node_debut_i node_debut_j
+   = match aretes_liste with
+   |((i1,j1), (i2,j2), expression_liste)::t -> 
+		  if (i2 = node_debut_i) && (j2 = node_debut_j)
+				 then Some ((i1,j1) , (i2,j2) , expression_liste)
+			else
+					get_arete_precedente t node_debut_i node_debut_j
+	 |[] -> None
+
+let _ = get_arete_precedente ensemble_dag_test.aretes "d" "g" 
+(* Some (("", ""), ("d", "g"), [Extract (Forward 3, Forward 4)]) *)
+let _ = get_arete_precedente ensemble_dag_test.aretes "dx" ""
+(* None *)
+
+(* *** *)
+
+(* La fonction vérifie si une arete a la possibilité de remonter à la source
+ (ou plus précisément : s'il est possible d'y accéder depuis la source) *)
+let rec verification_source aretes_liste node_debut_i node_debut_j =
+	  let recherche = (get_arete_precedente aretes_liste node_debut_i node_debut_j) in
+		match Option.is_some recherche with 
+		|false -> false
+		|true -> let resultat = Option.get recherche in 
+		                          match resultat with ((i1,j1), (i2,j2), expression_liste) ->
+															 if (i1 = "") && (j1 = "") 
+																	then true
+		                          else
+                                verification_source aretes_liste i1 j1
+		
+(* TEST *)
+let _ = verification_source ensemble_dag_test.aretes "dx" "ghx"
+(* true *)
+let _ = verification_source ensemble_dag_test.aretes "dx" ""
+(* false *)
+
+(* La fonction vérifie si une arete a la possibilité d'atteindre le puit *)
+let rec verification_puits aretes_liste node_fin_i node_fin_j str1 str2 =
+	  let recherche = (get_arete_suivante aretes_liste node_fin_i node_fin_j) in
+		match Option.is_some recherche with 
+		|false -> false
+		|true -> let resultat = Option.get recherche in 
+		                          match resultat with ((i1,j1), (i2,j2), expression_liste) ->
+															 if (i2 = str1) && (j2 = str2) 
+																	then true
+		                          else 
+                                verification_puits aretes_liste i2 j2 str1 str2
+
+(* TEST *)
+let _ = verification_puits ensemble_dag_test.aretes "d" "g" "dxa" "ghxe"
+(* false *)
+let _ = verification_puits ensemble_dag_test.aretes "d" "gh" "dxa" "ghxe"
+(* true *)
+
+(* *** *)
+type dag_final = {nodes : (string*string) list; aretes: ((string*string) * (string*string) * expression) list }
+		

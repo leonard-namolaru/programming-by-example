@@ -288,7 +288,8 @@ let _ = get_arete_precedente ensemble_dag_test.aretes "dx" ""
 
 (* La fonction vérifie si une arete a la possibilité de remonter à la source
  (ou plus précisément : s'il est possible d'y accéder depuis la source) *)
-let rec verification_source aretes_liste node_debut_i node_debut_j =
+let verification_source aretes_liste node_debut_i node_debut_j =
+	let rec f aretes_liste node_debut_i node_debut_j =
 	  let recherche = (get_arete_precedente aretes_liste node_debut_i node_debut_j) in
 		match Option.is_some recherche with 
 		|false -> false
@@ -297,7 +298,8 @@ let rec verification_source aretes_liste node_debut_i node_debut_j =
 															 if (i1 = "") && (j1 = "") 
 																	then true
 		                          else
-                                verification_source aretes_liste i1 j1
+                                f aretes_liste i1 j1
+  in if (node_debut_i = "") && (node_debut_j = "") then true else f aretes_liste node_debut_i node_debut_j
 		
 (* TEST *)
 let _ = verification_source ensemble_dag_test.aretes "dx" "ghx"
@@ -306,7 +308,8 @@ let _ = verification_source ensemble_dag_test.aretes "dx" ""
 (* false *)
 
 (* La fonction vérifie si une arete a la possibilité d'atteindre le puit *)
-let rec verification_puits aretes_liste node_fin_i node_fin_j str1 str2 =
+let verification_puits aretes_liste node_fin_i node_fin_j str1 str2 =
+	let rec f aretes_liste node_fin_i node_fin_j str1 str2 =
 	  let recherche = (get_arete_suivante aretes_liste node_fin_i node_fin_j) in
 		match Option.is_some recherche with 
 		|false -> false
@@ -315,7 +318,8 @@ let rec verification_puits aretes_liste node_fin_i node_fin_j str1 str2 =
 															 if (i2 = str1) && (j2 = str2) 
 																	then true
 		                          else 
-                                verification_puits aretes_liste i2 j2 str1 str2
+                                f aretes_liste i2 j2 str1 str2
+  in if (node_fin_i = str1) && (node_fin_j = str2) then true else f aretes_liste node_fin_i node_fin_j str1 str2
 
 (* TEST *)
 let _ = verification_puits ensemble_dag_test.aretes "d" "g" "dxa" "ghxe"
@@ -325,4 +329,39 @@ let _ = verification_puits ensemble_dag_test.aretes "d" "gh" "dxa" "ghxe"
 
 (* *** *)
 type dag_final = {nodes : (string*string) list; aretes: ((string*string) * (string*string) * expression) list }
-		
+
+(* Une fonction qui nettoie le graphe DAG de toutes les arêtes qui ne sont pas connectées
+   à la source ou au puits *)
+let nettoyage_dag (ensemble_dag : intersection_dag) str1 str2 =
+	let rec f nodes_final aretes_final aretes_liste_complete aretes str1 str2 =
+		match aretes with 
+		| [] ->  {nodes = nodes_final; aretes = aretes_final}
+		| ((i1,j1), (i2,j2), expression_liste)::t -> 
+			let verification1 = verification_puits aretes_liste_complete i2 j2 str1 str2 in
+			let verification2 = verification_source aretes_liste_complete i1 j1 in
+			if verification1 && verification2
+				then
+					begin 
+					let recherche1 = List.find_opt (fun (i,j) -> (i = i1) && (j = j1)) nodes_final in 
+					let recherche2 = List.find_opt (fun (i,j) -> (i = i2) && (j = j2)) nodes_final in
+					
+					if Option.is_none recherche1 && Option.is_none recherche2 then
+						f (nodes_final@[(i1,j1)]@[(i2,j2)]) (aretes_final@[((i1,j1), (i2,j2), List.hd expression_liste)]) aretes_liste_complete t str1 str2
+					else if Option.is_none recherche1 && (not (Option.is_none recherche2)) then
+						f (nodes_final@[(i1,j1)]) (aretes_final@[((i1,j1), (i2,j2), List.hd expression_liste)]) aretes_liste_complete t str1 str2
+					else if (not (Option.is_none recherche1)) && Option.is_none recherche2 then
+						f (nodes_final@[(i2,j2)]) (aretes_final@[((i1,j1), (i2,j2), List.hd expression_liste)]) aretes_liste_complete t str1 str2
+					else f nodes_final (aretes_final@[((i1,j1), (i2,j2), List.hd expression_liste)]) aretes_liste_complete t str1 str2
+					end
+			 else f nodes_final aretes_final aretes_liste_complete t str1 str2
+			
+	in f [] [] ensemble_dag.aretes ensemble_dag.aretes str1 str2
+
+(* TEST *)
+let nettoyage_dag_test = nettoyage_dag ensemble_dag_test "dxa" "ghxe"
+(*   {nodes = [("", ""); ("d", "gh"); ("dx", "ghx"); ("dxa", "ghxe")];
+   aretes =
+    [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0));
+     (("d", "gh"), ("dx", "ghx"), Const "x");
+     (("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))]}
+*)

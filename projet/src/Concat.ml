@@ -368,7 +368,7 @@ let nettoyage_dag_test = nettoyage_dag ensemble_dag_test "dxa" "ghxe"
 
 (* *** *)
 
-(* Extraire le programme du DAG *)00
+(* Extraire le programme du DAG *)
 let extraire_programme_dag graphe_dag_final = 
 	let rec f aretes_liste programme =
 		match aretes_liste with
@@ -401,5 +401,17 @@ let programme_to_string_liste programme  =
 
 (* TEST *)	
 let string_of_pgm_test = programme_to_string_liste mon_programme
+(*   ["DEBUT"; "Extract (Forward 3, Backward 0)"; "Const x";
+   "Extract (Forward 0, Forward 1)"; "FIN"] *)
 
+(* *** *)
 
+(* Générateur de programmes *)
+let generateur_programme str_in1 str_out1 str_in2 str_out2 = 
+	let dag1 = cons_dag str_in1 str_out1 and dag2 = cons_dag str_in2 str_out2 in 
+	let noeuds_dag1_2 = ensemble_noeuds dag1.nodes dag2.nodes in
+	let dag_1_2 = ensemble_dag noeuds_dag1_2 dag1.aretes dag2.aretes in 
+	let dag_final = nettoyage_dag dag_1_2 str_out1 str_out2 in 
+	extraire_programme_dag dag_final
+	
+let pgm_exemple = generateur_programme "abad" "dxa" "efegh" "ghxe"

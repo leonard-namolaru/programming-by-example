@@ -449,7 +449,8 @@ let get_noeuds_voisins (noeud : (string * string) * int option) (aretes : ((stri
 let rec get_cout_arete_entre_2_noeuds noeud1 noeud2 (aretes : ((string*string) * (string*string) * expression) list) =
 	match aretes with 
 	|[] -> None
-	|((i1,j1), (i2,j2), expression)::t -> if (i1 = fst noeud1) && (j1 = snd noeud1)	&& (i2 = fst noeud2) && (j2 = snd noeud2)	then
+	|((i1,j1), (i2,j2), expression)::t -> match noeud1,noeud2 with ((a,b), distance1),((c,d), distance2) ->
+																				if (i1 = a) && (j1 = b)	&& (i2 = c) && (j2 = d)	then
 		                                       match expression with
 																					 |Const x -> Some 2
 																					 |Extract (pos_expression1, pos_expression2) -> Some 1

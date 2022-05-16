@@ -368,7 +368,7 @@ let nettoyage_dag_test = nettoyage_dag ensemble_dag_test "dxa" "ghxe"
 
 (* *** *)
 
-(* Extraire le programme du DAG *)
+(* Extraire le programme du DAG *)00
 let extraire_programme_dag graphe_dag_final = 
 	let rec f aretes_liste programme =
 		match aretes_liste with
@@ -384,3 +384,22 @@ let resultat_pgm1 = evaluation_program mon_programme "abad"
 (* val resultat_pgm1 : string = "dxa" *)
 let resultat_pgm2 = evaluation_program mon_programme "efegh" 
 (* val resultat_pgm2 : string = "ghxe" *)
+
+(* *** *)
+
+(* Conversion d'un "code" de programme en une liste de chaînes de caractères pouvant être imprimées à l'écran et affichées à l'utilisateur *)
+let programme_to_string_liste programme  =
+	let rec f programme string_liste = match (programme : expression list) with
+	|[] -> string_liste 
+	|(Const x):: t -> f t (string_liste@[("Const " ^ x)])
+	|Extract (Forward num1, Backward num2)::t ->  f t (string_liste@[("Extract (Forward " ^ (string_of_int num1) ^ ", Backward " ^ (string_of_int num2) ^ ")" )])
+	|Extract (Backward num1, Forward num2)::t ->  f t (string_liste@[("Extract (Backward " ^ (string_of_int num1) ^ ", Forward " ^ (string_of_int num2) ^ ")" )])
+	|Extract (Forward num1, Forward num2)::t ->  f t (string_liste@[("Extract (Forward " ^ (string_of_int num1) ^ ", Forward " ^ (string_of_int num2) ^ ")" )])
+	|Extract (Backward num1, Backward num2)::t ->  f t (string_liste@[("Extract (Forward " ^ (string_of_int num1) ^ ", Forward " ^ (string_of_int num2) ^ ")" )])
+	
+	in ((f programme ["DEBUT"])@["FIN"])
+
+(* TEST *)	
+let string_of_pgm_test = programme_to_string_liste mon_programme
+
+

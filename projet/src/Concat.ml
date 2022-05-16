@@ -365,3 +365,22 @@ let nettoyage_dag_test = nettoyage_dag ensemble_dag_test "dxa" "ghxe"
      (("d", "gh"), ("dx", "ghx"), Const "x");
      (("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))]}
 *)
+
+(* *** *)
+
+(* Extraire le programme du DAG *)
+let extraire_programme_dag graphe_dag_final = 
+	let rec f aretes_liste programme =
+		match aretes_liste with
+		| [] -> programme
+		| ((i1,j1), (i2,j2), expression)::t -> f t (programme@[expression])
+	in f graphe_dag_final.aretes [] 
+	
+(* TEST *)
+let mon_programme = extraire_programme_dag nettoyage_dag_test
+(* val mon_programme : expression list = [Extract (Forward 3, Backward 0); Const "x"; Extract (Forward 0, Forward 1)] *)
+
+let resultat_pgm1 = evaluation_program mon_programme "abad"
+(* val resultat_pgm1 : string = "dxa" *)
+let resultat_pgm2 = evaluation_program mon_programme "efegh" 
+(* val resultat_pgm2 : string = "ghxe" *)

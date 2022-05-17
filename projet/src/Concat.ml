@@ -410,9 +410,9 @@ let string_of_pgm_test = programme_to_string_liste mon_programme
 let generateur_programme str_in1 str_out1 str_in2 str_out2 = 
 	let dag1 = cons_dag str_in1 str_out1 and dag2 = cons_dag str_in2 str_out2 in 
 	let noeuds_dag1_2 = ensemble_noeuds dag1.nodes dag2.nodes in
-let dag_1_2 = ensemble_dag noeuds_dag1_2 dag1.aretes dag2.aretes in 
-	(* let  dag_final =*)  nettoyage_dag dag_1_2 str_out1 str_out2  (* in *)
-	(*extraire_programme_dag dag_final *)
+	let dag_1_2 = ensemble_dag noeuds_dag1_2 dag1.aretes dag2.aretes in 
+	let  dag_final = nettoyage_dag dag_1_2 str_out1 str_out2  in 
+	extraire_programme_dag dag_final 
 	
 let pgm_exemple = generateur_programme "abad" "dxa" "efegh" "ghxe"
 
@@ -470,6 +470,9 @@ let voisins_test_a = get_noeuds_voisins (("", ""), Some 0) [(("", ""), ("1", "1"
 let voisins_test_b = get_noeuds_voisins (("1", "1"), None) [(("", ""), ("1", "1"), Extract (Forward 3, Forward 4)); (("", ""), ("10", "15"), Extract (Forward 3, Forward 5)); (("1", "1"), ("10", "15"), Extract (Forward 1, Forward 2))] noeuds_dijkstra_test2
 (* [(("10", "15"), None)] *)
 
+let voisins_test_c = get_noeuds_voisins (("10", "15"), None) [(("", ""), ("1", "1"), Extract (Forward 3, Forward 4)); (("", ""), ("10", "15"), Extract (Forward 3, Forward 5)); (("1", "1"), ("10", "15"), Extract (Forward 1, Forward 2))] noeuds_dijkstra_test2
+(* [] *)
+
 
 let rec get_cout_arete_entre_2_noeuds (noeud1 : ((string * string) * (int option))) (noeud2 : ((string * string) * (int option))) (aretes : ((string*string) * (string*string) * expression) list) =
 	match aretes with 
@@ -481,6 +484,7 @@ let rec get_cout_arete_entre_2_noeuds (noeud1 : ((string * string) * (int option
 																					 |Extract (pos_expression1, pos_expression2) -> Some 1
 																				else get_cout_arete_entre_2_noeuds noeud1 noeud2 t  	
 									
+
 (* On met à jour les distances des sommets voisins de celui ajouté *)
 let voisins_dernier_ajout_mis_a_jour (aretes : ((string*string) * (string*string) * expression) list ) (dernier_ajout : (string * string) * int option) noeuds =
 	let rec f noeuds_voisins aretes noeuds_mis_a_jour dernier_ajout =
@@ -498,11 +502,16 @@ let voisins_dernier_ajout_mis_a_jour (aretes : ((string*string) * (string*string
 																else if Option.is_some distance then f t aretes (noeuds_mis_a_jour@[((i,j), Some (Option.get distance))]) dernier_ajout
 																else f t aretes noeuds_mis_a_jour dernier_ajout
 	in f (get_noeuds_voisins dernier_ajout aretes noeuds) aretes [] dernier_ajout
-	
+
+
 (* TEST *)
 let noeuds_mis_a_jour_test = voisins_dernier_ajout_mis_a_jour [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] (("", ""), Some 0) noeuds_dijkstra_test
 (* val noeuds_mis_a_jour_test : ((string * string) * int option) list = [(("d", "gh"), Some 1)] *)
-	
+
+let noeuds_mis_a_jour_test2 = voisins_dernier_ajout_mis_a_jour [(("", ""), ("1", "1"), Extract (Forward 3, Forward 4)); (("", ""), ("10", "15"), Extract (Forward 3, Forward 5)); (("1", "1"), ("10", "15"), Extract (Forward 1, Forward 2))] (("", ""), Some 0) noeuds_dijkstra_test2
+(* [(("1", "1"), Some 1); (("10", "15"), Some 1)] *)
+
+
 let distances_maj noeud_visites noeuds_dijkstra noeuds_maj =
 	let rec f noeud_visites noeuds_dijkstra noeuds_maj noeud_visites_maj noeuds_dijkstra_maj =
 		match noeud_visites,noeuds_dijkstra with
@@ -546,7 +555,7 @@ let get_min_parmis_non_visites noeuds_dijkstra =
 																					f distance index (index + 1) t
 															       else
 																        f min min_index (index + 1) t
-	   |[] -> print_int (Option.get min) ; min_index
+	   |[] -> min_index
 																
 	in match noeuds_dijkstra with
 	| [] -> -1
@@ -591,5 +600,106 @@ let dijkstra dag_final =
 let dijkstra_test = dijkstra nettoyage_dag_test
 (*   [(("", ""), Some 0); (("d", "gh"), Some 1); (("dx", "ghx"), Some 3); (("dxa", "ghxe"), Some 4)] *)
 
-let pgm_exemple = generateur_programme "10/10/2017" "10" "05-15-2015" "15"
-let dijkstra_test = dijkstra pgm_exemple
+let new_deg_final_test =  {nodes = [("", ""); ("1", "0"); ("10", "02")]; aretes = [(("", ""), ("1", "0"), Extract (Forward 3, Forward 4)); (("", ""), ("10", "02"), Extract (Forward 3, Forward 5)); (("1", "0"), ("10", "02"), Extract (Forward 4, Forward 5))]}
+ let dijkstra_test2 = dijkstra new_deg_final_test
+(* [(("", ""), Some 0); (("1", "0"), Some 1); (("10", "02"), Some 1)] *)
+
+let construction_programme_get_min_ou_dernier_noeud noeuds out1 out2 =
+	let rec f noeuds out1 out2 min min_noeud = match noeuds with
+															 |((i,j), distance)::t -> if (i = out1) && (j = out2) then 
+																													((i,j), distance)		
+																                        else 
+																													if  Option.is_some distance then
+																													 if Option.is_some min then
+			                        															  if ((Option.get distance) <= (Option.get min)) then
+			                            					                      f t out1 out2 distance ((i,j), distance)
+																					                    else
+																						                     f t out1 out2 min min_noeud
+																				                    else
+																					                    f t out1 out2 distance ((i,j), distance)
+															                        		 else
+																                             f t out1 out2 min min_noeud
+															  |[] -> min_noeud
+
+	in match noeuds with |((i,j), distance)::t -> f (List.tl noeuds) out1 out2 distance ((i,j), distance) |[] -> failwith "error"
+
+let constuction_programme_apres_dijkstra dijkstra_resultat dag_final out1 out2 =
+	let rec f dernier_ajout aretes noeuds programme out1 out2 fin_pgm =
+		match fin_pgm with 
+		| true -> programme
+		| false -> let voisins = get_noeuds_voisins dernier_ajout aretes noeuds in
+		                          if (List.length voisins != 0) then
+																let min_ou_dernier_noeud = construction_programme_get_min_ou_dernier_noeud voisins out1 out2 in
+																   match min_ou_dernier_noeud with ((i_min,j_min), distance_min) ->
+																		if (i_min = out1) && (j_min = out2) then
+																				(programme@[min_ou_dernier_noeud])
+																		else f min_ou_dernier_noeud aretes noeuds (programme@[min_ou_dernier_noeud]) out1 out2 false
+															else f dernier_ajout aretes noeuds programme out1 out2 true
+	  in f (("",""),Some 0) dag_final.aretes dijkstra_resultat [(("",""),Some 0)] out1 out2 false
+																
+(* TEST *)																			
+let test = constuction_programme_apres_dijkstra dijkstra_test2 new_deg_final_test "10" "02"
+(* [(("", ""), Some 0); (("10", "02"), Some 1)] *)
+
+let test2 = constuction_programme_apres_dijkstra dijkstra_test nettoyage_dag_test "dxa" "ghxe"
+(*   [(("", ""), Some 0); (("d", "gh"), Some 1); (("dx", "ghx"), Some 3);(("dxa", "ghxe"), Some 4)] *)
+
+let trouver_arete_apres_dijkstra noeud1 noeud2 aretes =
+	let rec f i1 j1 i2 j2 aretes =
+		match aretes with
+		| [] -> None
+		| ((a,b), (c,d), expression)::t -> if (a = i1) && (b = j1) && (c = i2) && (d = j2) then
+			                                     Some ((a,b), (c,d), expression)
+																				else
+																					f i1 j1 i2 j2 t
+																					
+	in match noeud1,noeud2 with ((i1,j1), distance1),((i2,j2), distance2) -> f i1 j1 i2 j2 aretes
+
+let programme_final_apres_dijkstra constuction_programme_apres_dijkstra_result dag_final =
+	let rec f noeuds aretes programme = 
+		match noeuds with 
+	  |[] -> programme
+		|h::t -> let prochain_noeud = get_noeuds_voisins h aretes noeuds in
+		                          		if (List.length prochain_noeud = 0) then
+																			programme
+																	else
+																		  let arete = trouver_arete_apres_dijkstra h (List.hd prochain_noeud) aretes in
+																		   if Option.is_none arete then
+																				programme
+																			else
+																				let get_arete = Option.get arete in
+																				match get_arete with ((a,b), (c,d), expression) ->
+																				f t aretes (programme@[expression])
+																				
+	in  f constuction_programme_apres_dijkstra_result dag_final.aretes []		
+	
+let test_pgm = programme_final_apres_dijkstra test new_deg_final_test		
+(* [Extract (Forward 3, Forward 5)] *)
+
+let test_pgm2 = programme_final_apres_dijkstra test2 nettoyage_dag_test			 
+(*   [Extract (Forward 3, Backward 0); Const "x"; Extract (Forward 0, Forward 1)]		*)					
+
+																				
+let generateur_programme_apres_dijkstra str_in1 str_out1 str_in2 str_out2 = 
+	let dag1 = cons_dag str_in1 str_out1 and dag2 = cons_dag str_in2 str_out2 in 
+	let noeuds_dag1_2 = ensemble_noeuds dag1.nodes dag2.nodes in
+	let dag_1_2 = ensemble_dag noeuds_dag1_2 dag1.aretes dag2.aretes in 
+	let dag_final = nettoyage_dag dag_1_2 str_out1 str_out2  in 
+	let dijkstra_result = dijkstra dag_final in
+	let nodes_path = constuction_programme_apres_dijkstra dijkstra_result dag_final str_out1 str_out2 in 
+	programme_final_apres_dijkstra nodes_path dag_final 
+	
+let pgm_exemple = generateur_programme_apres_dijkstra "abad" "dxa" "efegh" "ghxe"
+(*   [Extract (Forward 3, Backward 0); Const "x"; Extract (Forward 0, Forward 1)] *)
+
+let pgm_exemple2 = generateur_programme_apres_dijkstra "10/10/2017" "10" "05-15-2015" "15" 
+(* [Extract (Forward 3, Forward 5)] *)
+
+let pgm_exemple3 = generateur_programme_apres_dijkstra "abcd" "abcd" "34" "34" 
+(* [Extract (Forward 0, Backward 0)] *)
+												
+let pgm_exemple4 = generateur_programme_apres_dijkstra "10/10/2017" "2017" "05-15-2015" "2015" 
+(* [Extract (Forward 6, Forward 10)] *)
+
+let pgm_exemple5 = generateur_programme_apres_dijkstra "10/10/2017" "2017" "05-5-2015" "2015" 
+(* [Extract (Backward 4, Backward 0)] *)

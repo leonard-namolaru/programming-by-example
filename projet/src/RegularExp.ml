@@ -3,14 +3,14 @@
 (* Chaque class decrit une classe de caracteres *)
 type classe = | Alphanumeric      (* les alpha-numeriques      *)
               | Numeric           (* les chiffres              *)
-              | Alpha             (* les lettres de lâ€™alphabet *)
+              | Alpha             (* les lettres de l’alphabet *)
               | Lower             (* les lettres minuscules    *)
               | Upper             (* les lettres majuscules    *)
               | Special of char   (* caracteres speciaux       *)
 
              (* Le token plus(classe) filtre un mot m quand m est non-vide, et tous les caracteres de m sont dans classe *)
 type token = | Plus of classe 
-             (* Le token neg(classe) filtre un mot m quand m est non-vide, et aucun caractere de m nâ€™est dans classe. *)
+             (* Le token neg(classe) filtre un mot m quand m est non-vide, et aucun caractere de m n’est dans classe. *)
              | Neg of classe
 
 type regexp = token list (* Une expression reguliere est une sequence non-vide de tokens. *)
@@ -22,7 +22,7 @@ let filtrage_mot_par_token mot regexp_token =
       match nom_classe with 
       | Alphanumeric (* les alpha-numeriques *) -> String.for_all (fun c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) mot
       | Numeric (* les chiffres *) -> String.for_all (fun c -> (c >= '0' && c <= '9')) mot
-      | Alpha   (* les lettres de lâ€™alphabet *) -> String.for_all (fun c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) mot
+      | Alpha   (* les lettres de l’alphabet *) -> String.for_all (fun c -> (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) mot
       | Lower   (* les lettres minuscules *) -> String.for_all (fun c ->  (c >= 'a' && c <= 'z')) mot
       | Upper   (* les lettres majuscules *) -> String.for_all (fun c ->  (c >= 'A' && c <= 'Z')) mot
       | Special caractere (* caracteres speciaux *) -> String.for_all (fun c ->  (c = caractere)) mot
@@ -36,7 +36,7 @@ let _ = print_endline (Bool.to_string (filtrage_mot_par_token "." (Plus (Special
 let _ = print_endline (Bool.to_string (filtrage_mot_par_token "." (Plus Alphanumeric)))
 
 
-(* La partie maximale d'un mot qui est filtrÃ©e par un token d'une expression rÃ©guliÃ¨re *)
+(* La partie maximale d'un mot qui est filtrée par un token d'une expression régulière *)
 let rec partie_max_mot_filtrage_par_token mot regexp_token = 
     match (String.length mot) with
     |0 -> mot (* "" *)
@@ -50,10 +50,10 @@ let _ = print_endline ((partie_max_mot_filtrage_par_token "OCaml" (Plus Lower)))
 let _ = print_endline ((partie_max_mot_filtrage_par_token "ocAml" (Plus Lower)))
 let _ = print_endline ((partie_max_mot_filtrage_par_token "" (Plus Lower)))
 
-(* Filtrage dâ€™un mot par une expression reguliere *)
+(* Filtrage d’un mot par une expression reguliere *)
 let rec filtrage_mot_par_expression_reguliere (mot:string) (expression:regexp) = match expression with 
                 |[] -> false
-                (* Une expression reguliere consistuee dâ€™un unique token t filtre un mot m lorsque t filtre m *)
+                (* Une expression reguliere consistuee d’un unique token t filtre un mot m lorsque t filtre m *)
                 |regexp_token::[] -> filtrage_mot_par_token mot regexp_token
                 |regexp_token::fin_regexp -> 
                   let m1 = partie_max_mot_filtrage_par_token mot regexp_token 
@@ -68,7 +68,7 @@ let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "oc
 let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "ML33" [Plus Lower ; Plus Upper ; Plus Numeric]))
 let _ = print_endline (Bool.to_string (filtrage_mot_par_expression_reguliere "" []))
 
-(* le premier facteur de str qui est filtrÃ© par une expression reguliere *)
+(* le premier facteur de str qui est filtré par une expression reguliere *)
 let before (str:string) (expression:regexp) = 
   let rec f index str expression =
     match (String.length str) with
@@ -107,7 +107,7 @@ let test_mot = "+ocaML33"
 let _ = print_int (before test_mot test_expression) ; print_char ',' ; print_int (after test_mot test_expression)
 let _ = print_newline ()
 
-(* le dernier facteur de str qui est filtrÃ© par une expression reguliere *)
+(* le dernier facteur de str qui est filtré par une expression reguliere *)
 let afterlast (str:string) (expression:regexp) = 
   after str expression
 
@@ -155,10 +155,10 @@ let test_mot = "+oca"
 let _ = print_int (beforelast test_mot test_expression) ; print_char ',' ; print_int (afterlast test_mot test_expression)
 let _ = print_newline ()
 
-(* Connaitre lâ€™ensemble des expressions rÃ©guliÃ¨res qui filtrent str *) 
-(* Calcule de cette information de faÃ§on ascendante (bottom-up) en sâ€™inspirant de la programmation dynamique *)
+(* Connaitre l’ensemble des expressions régulières qui filtrent str *) 
+(* Calcule de cette information de façon ascendante (bottom-up) en s’inspirant de la programmation dynamique *)
 
-(* Fonction auxiliaire : InsÃ¨re un Ã©lÃ©ment Ã  la position i dans une liste *)
+(* Fonction auxiliaire : Insère un élément à la position i dans une liste *)
 let list_ajout_element_position_i liste element i = 
   let rec f liste element i counter = match liste with
                                             |[] -> 
@@ -171,8 +171,8 @@ let list_ajout_element_position_i liste element i =
                                               else head::(f tail element i (counter + 1))
   in f liste element i 0
 
-(* Fonction auxiliaire : Lorsqu'il s'agit d'une liste de listes (liste Ã  deux dimensions), 
-la fonction nous permet d'ajouter un Ã©lÃ©ment spÃ©cifique dans la ligne et la colonne de notre choix *)
+(* Fonction auxiliaire : Lorsqu'il s'agit d'une liste de listes (liste à deux dimensions), 
+la fonction nous permet d'ajouter un élément spécifique dans la ligne et la colonne de notre choix *)
 let list_list_ajout_element_position_ligne_colonne liste element ligne colonne =
   let rec f liste element ligne colonne counter_ligne = match liste with 
                                                      |[] -> if(ligne = counter_ligne)
@@ -186,8 +186,8 @@ let list_list_ajout_element_position_ligne_colonne liste element ligne colonne =
                                                                   else head::(f tail element ligne colonne (counter_ligne + 1))
   in f liste element ligne colonne 0
 
-(* Fonction auxiliaire : Pour une liste de listes (liste Ã  deux dimensions), 
-la fonction permet d'obtenir un Ã©lÃ©ment prÃ©cis par numÃ©ro de ligne et numÃ©ro de colonne *)
+(* Fonction auxiliaire : Pour une liste de listes (liste à deux dimensions), 
+la fonction permet d'obtenir un élément précis par numéro de ligne et numéro de colonne *)
 let list_list_get liste ligne colonne = ((List.nth (List.nth liste (ligne)) colonne))
 
 (* Test *)
@@ -197,8 +197,8 @@ let _ = list_list_get (list_list_ajout_element_position_ligne_colonne [[1;3];[4;
 
 (* ---------------------------------------------------------------------------- *)
 
-(* Connaitre lâ€™ensemble des expressions rÃ©guliÃ¨res qui filtrent str *) 
-(* Calcule de cette information de faÃ§on ascendante (bottom-up) en sâ€™inspirant de la programmation dynamique *)
+(* Connaitre l’ensemble des expressions régulières qui filtrent str *) 
+(* Calcule de cette information de façon ascendante (bottom-up) en s’inspirant de la programmation dynamique *)
 
 let ensemble_expressions_regulieres_filtrent_str (str:string) (tokens:token list) =
   let rec construction_matrice index_str index_token nb_type_de_tokens longeur_str matrice tokens = match (index_token = nb_type_de_tokens)  with
@@ -216,19 +216,3 @@ let ensemble_expressions_regulieres_filtrent_str (str:string) (tokens:token list
   in construction_matrice 0 0 (List.length tokens) (String.length str) [] tokens 
 
 let _ = ensemble_expressions_regulieres_filtrent_str "Ab8" [Plus Lower; Plus Alpha; Plus Alphanumeric ; Plus Numeric ; Plus Upper]
-
-
-(*
-   
-  in let rec construction_resultat index_str index_token nb_type_de_tokens longeur_str matrice tokens ensemble_expressions = match (index_token = nb_type_de_tokens)  with
-  |true -> ensemble_expressions
-  |false -> match (index_str = longeur_str) with
-            |true -> construction_resultat 0 (index_token + 1) nb_type_de_tokens longeur_str matrice tokens
-            |false -> 
-              let element = list_list_get liste ligne colonne
-                if (filtrage_mot_par_token (String.sub str index_str 1) (List.nth tokens index_token)) 
-                  then Option.some (List.nth tokens index_token)
-                else Option.none
-              in construction_resultat (index_str + 1) index_token nb_type_de_tokens longeur_str (list_list_ajout_element_position_ligne_colonne matrice filtrage_resultat index_token index_str) tokens 
-
-*)

@@ -109,3 +109,6 @@ let _ = if (List.length input_list2 > 0) then
 						mode_deux_fichier input_list output_list input_list2
 				else
 					mode_fichier__input_output input_list output_list
+					
+(* TEST : RegularExp.ml *)
+(* let _ = print_endline (RegularExp.partie_max_mot_filtrage_par_token "ocaML" (Plus Lower)) *)

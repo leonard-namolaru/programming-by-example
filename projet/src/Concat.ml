@@ -430,7 +430,12 @@ let dijkstra_distance_provisoire noeuds =
 										                                    then f t (noeuds_dijkstra@[((noeud_dag1, noeud_dag2),Some 0)])
 																										 else f t (noeuds_dijkstra@[((noeud_dag1, noeud_dag2),None)])
 	in f noeuds []
-
+	
+(* TEST *)
+let noeuds_dijkstra_test = dijkstra_distance_provisoire [("", ""); ("d", "gh"); ("dx", "ghx"); ("dxa", "ghxe")]
+(* val noeuds_dijkstra_test : ((string * string) * int option) list =
+   [(("", ""), Some 0); (("d", "gh"), None); (("dx", "ghx"), None); (("dxa", "ghxe"), None)] *)
+	
 let get_noeuds_voisins (noeud : (string * string) * int option) (aretes : ((string*string) * (string*string) * expression) list ) noeuds =
 	let rec f noeud aretes voisins noeuds = 
 		match aretes with
@@ -445,6 +450,17 @@ let get_noeuds_voisins (noeud : (string * string) * int option) (aretes : ((stri
       else f noeud t voisins noeuds
 
 	in f noeud aretes ([]: ((string * string)* int option) list) noeuds
+	
+(* TEST *)
+let voisins_test = get_noeuds_voisins (("", ""), Some 0) [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] noeuds_dijkstra_test
+(* [(("d", "gh"), None)] *)
+let voisins_test2 = get_noeuds_voisins (("d", "gh"), None) [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] noeuds_dijkstra_test
+(*	[(("dx", "ghx"), None)] *)
+let voisins_test3 = get_noeuds_voisins (("dx", "ghx"), None) [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] noeuds_dijkstra_test
+(*	  [(("dxa", "ghxe"), None)] *)
+let voisins_test4 = get_noeuds_voisins (("dxa", "ghxe"), None) [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] noeuds_dijkstra_test
+(*	[] *)
+
 
 let rec get_cout_arete_entre_2_noeuds (noeud1 : ((string * string) * (int option))) (noeud2 : ((string * string) * (int option))) (aretes : ((string*string) * (string*string) * expression) list) =
 	match aretes with 
@@ -472,28 +488,41 @@ let voisins_dernier_ajout_mis_a_jour (aretes : ((string*string) * (string*string
 																		f t aretes (noeuds_mis_a_jour@[((i,j), Some ((Option.get distance1) + (Option.get cout)) )]) dernier_ajout
 																else 	f t aretes noeuds_mis_a_jour dernier_ajout
 	in f (get_noeuds_voisins dernier_ajout aretes noeuds) aretes [] dernier_ajout
-
+	
+(* TEST *)
+let noeuds_mis_a_jour_test = voisins_dernier_ajout_mis_a_jour [(("", ""), ("d", "gh"), Extract (Forward 3, Backward 0)); (("d", "gh"), ("dx", "ghx"), Const "x");(("dx", "ghx"), ("dxa", "ghxe"), Extract (Forward 0, Forward 1))] (("", ""), Some 0) noeuds_dijkstra_test
+(* val noeuds_mis_a_jour_test : ((string * string) * int option) list = [(("d", "gh"), Some 1)] *)
+	
 let distances_maj noeud_visites noeuds_dijkstra noeuds_maj =
 	let rec f noeud_visites noeuds_dijkstra noeuds_maj noeud_visites_maj noeuds_dijkstra_maj =
 		match noeud_visites,noeuds_dijkstra with
 		|[],[] -> (noeud_visites_maj, noeuds_dijkstra_maj)
 		|((i1,j1), distance1)::t1 , ((i2,j2), distance2)::t2 -> 
-			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j) && (distance1 = distance)) noeuds_maj
-			and verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j) && (distance2 = distance)) noeuds_maj in
+			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j)) noeuds_maj
+			and verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j)) noeuds_maj in
 			if Option.is_some verification1 then f t1 t2 noeuds_maj (noeud_visites_maj@[Option.get verification1]) (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 			else if Option.is_some verification2 then f t1 t2 noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) (noeuds_dijkstra_maj@[Option.get verification2])
 		  else f t1 t2 noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 		|((i1,j1), distance1)::t1 , [] -> 
-			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j) && (distance1 = distance)) noeuds_maj in
+			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j)) noeuds_maj in
 			if Option.is_some verification1 then f t1 [] noeuds_maj (noeud_visites_maj@[Option.get verification1]) noeuds_dijkstra_maj
 		  else f t1 [] noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) noeuds_dijkstra_maj
 		|[] , ((i2,j2), distance2)::t2 -> 
-			let verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j) && (distance2 = distance)) noeuds_maj in
+			let verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j)) noeuds_maj in
       if Option.is_some verification2 then f [] t2 noeuds_maj noeud_visites_maj (noeuds_dijkstra_maj@[Option.get verification2])
 		  else f [] t2 noeuds_maj noeud_visites_maj (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 
 	in f noeud_visites noeuds_dijkstra noeuds_maj [] []
 	
+(* TEST *)
+let test_distances_maj = distances_maj [(("", ""), Some 0)] [(("d", "gh"), None); (("dx", "ghx"), None); (("dxa", "ghxe"), None)] noeuds_mis_a_jour_test
+(* val test_distances_maj :
+  ((string * string) * int option) list *
+  ((string * string) * int option) list =
+  ([(("", ""), Some 0)],
+   [(("d", "gh"), Some 1); (("dx", "ghx"), None); (("dxa", "ghxe"), None)]) *)
+
+
 let get_min_parmis_non_visites noeuds_dijkstra =
 	let rec f min min_index index noeuds_dijkstra =
 		match noeuds_dijkstra with

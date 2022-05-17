@@ -444,9 +444,9 @@ let get_noeuds_voisins (noeud : (string * string) * int option) (aretes : ((stri
 					f noeud t voisins noeuds
       else f noeud t voisins noeuds
 
-	in f noeud aretes [] noeuds
+	in f noeud aretes ([]: ((string * string)* int option) list) noeuds
 
-let rec get_cout_arete_entre_2_noeuds noeud1 noeud2 (aretes : ((string*string) * (string*string) * expression) list) =
+let rec get_cout_arete_entre_2_noeuds (noeud1 : ((string * string) * (int option))) (noeud2 : ((string * string) * (int option))) (aretes : ((string*string) * (string*string) * expression) list) =
 	match aretes with 
 	|[] -> None
 	|((i1,j1), (i2,j2), expression)::t -> match noeud1,noeud2 with ((a,b), distance1),((c,d), distance2) ->
@@ -459,10 +459,10 @@ let rec get_cout_arete_entre_2_noeuds noeud1 noeud2 (aretes : ((string*string) *
 (* On met à jour les distances des sommets voisins de celui ajouté *)
 let voisins_dernier_ajout_mis_a_jour (aretes : ((string*string) * (string*string) * expression) list ) (dernier_ajout : (string * string) * int option) noeuds =
 	let rec f noeuds_voisins aretes noeuds_mis_a_jour dernier_ajout =
-		match noeuds_voisins with
+		match (noeuds_voisins : ((string * string) * int option) list) with
 		|[] -> noeuds_mis_a_jour
 		|((i,j), distance)::t -> match dernier_ajout with ((i1,j1), distance1) -> 
-			                          let cout = get_cout_arete_entre_2_noeuds (i1,j1) (i,j) aretes in
+			                          let cout = get_cout_arete_entre_2_noeuds ((i1,j1), distance1) ((i,j), distance) aretes in
 		                            if (Option.is_some cout) && (Option.is_some distance1)  then 
 																	if Option.is_some distance then
 																		if (Option.get distance1) + (Option.get cout) < (Option.get distance) then

@@ -123,7 +123,7 @@ let string_to_aretes str1 str2 node_list= let rec f aretes_liste str1 str2 node_
 																							
 let nodes_to_aretes nodes_liste str1 str2 = let rec f aretes_liste nodes_liste str1 str2 = match nodes_liste with
                                                 |[] -> aretes_liste
-                                                |h::[] -> aretes_liste
+                                                |_::[] -> aretes_liste
                                                 |h::t -> let aretes = string_to_aretes str1 h t in
 																								         f (aretes_liste@aretes) t str1 str2
 		in f [] nodes_liste str1 str2
@@ -205,12 +205,12 @@ let arretes_partie_commune arrete1 arrete2 =
 						           if Option.is_some extraire_partie_identique then f (partie_commune@[Option.get extraire_partie_identique]) t expression_dag_liste2
 											 else f partie_commune t expression_dag_liste2
 											
-	in match arrete1,arrete2 with (node_debut1 , node_fin1 , expression_dag_liste1),(node_debut2 , node_fin2 , expression_dag_liste2) -> 
+	in match arrete1,arrete2 with (_ , _ , expression_dag_liste1),(_ , _ , expression_dag_liste2) -> 
 		match (f [] expression_dag_liste1 expression_dag_liste2) with
 		     |[] -> None
-				 |h::t -> let extraire_extract = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Extract (x1,x2)): expression) -> true |_ -> false else false) (h::t) in
+				 |h::t -> let extraire_extract = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Extract (_,_)): expression) -> true |_ -> false else false) (h::t) in
 				            if Option.is_some extraire_extract then Option.get extraire_extract
-										else let extraire_const = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Const x): expression) -> true |_ -> false else false) (h::t) in
+										else let extraire_const = List.find_opt (fun element_liste -> if (Option.is_some element_liste) then match (Option.get element_liste) with |((Const _): expression) -> true |_ -> false else false) (h::t) in
 										if Option.is_some extraire_const then Option.get extraire_const
 										else None
 (* TEST *)							
@@ -294,7 +294,7 @@ let verification_source aretes_liste node_debut_i node_debut_j =
 		match Option.is_some recherche with 
 		|false -> false
 		|true -> let resultat = Option.get recherche in 
-		                          match resultat with ((i1,j1), (i2,j2), expression_liste) ->
+		                          match resultat with ((i1,j1), (_,_), _) ->
 															 if (i1 = "") && (j1 = "") 
 																	then true
 		                          else
@@ -314,7 +314,7 @@ let verification_puits aretes_liste node_fin_i node_fin_j str1 str2 =
 		match Option.is_some recherche with 
 		|false -> false
 		|true -> let resultat = Option.get recherche in 
-		                          match resultat with ((i1,j1), (i2,j2), expression_liste) ->
+		                          match resultat with ((_,_), (i2,j2), _) ->
 															 if (i2 = str1) && (j2 = str2) 
 																	then true
 		                          else 
@@ -373,7 +373,7 @@ let extraire_programme_dag graphe_dag_final =
 	let rec f aretes_liste programme =
 		match aretes_liste with
 		| [] -> programme
-		| ((i1,j1), (i2,j2), expression)::t -> f t (programme@[expression])
+		| ((_,_), (_,_), expression)::t -> f t (programme@[expression])
 	in f graphe_dag_final.aretes [] 
 	
 (* TEST *)
@@ -414,7 +414,7 @@ let generateur_programme str_in1 str_out1 str_in2 str_out2 =
 	let  dag_final = nettoyage_dag dag_1_2 str_out1 str_out2  in 
 	extraire_programme_dag dag_final 
 	
-let pgm_exemple = generateur_programme "abad" "dxa" "efegh" "ghxe"
+let _ = generateur_programme "abad" "dxa" "efegh" "ghxe"
 
 (* *** *)
 
@@ -443,9 +443,9 @@ let get_noeuds_voisins (noeud : (string * string) * int option) (aretes : ((stri
 	let rec f noeud aretes voisins noeuds = 
 		match aretes with
 	  |[] -> voisins
-		|((i1,j1), (i2,j2), expression)::t -> match noeud with ((i,j),distance) ->
+		|((i1,j1), (i2,j2), _)::t -> match noeud with ((i,j),_) ->
 			if (i1 = i && j1 = j) then 
-				let recherche = List.find_opt (fun ((i,j), distance) -> (i = i2) && (j = j2)) noeuds in
+				let recherche = List.find_opt (fun ((i,j), _) -> (i = i2) && (j = j2)) noeuds in
 				if Option.is_some recherche then
 					f noeud t (voisins@[Option.get recherche]) noeuds
 				else 
@@ -477,11 +477,11 @@ let voisins_test_c = get_noeuds_voisins (("10", "15"), None) [(("", ""), ("1", "
 let rec get_cout_arete_entre_2_noeuds (noeud1 : ((string * string) * (int option))) (noeud2 : ((string * string) * (int option))) (aretes : ((string*string) * (string*string) * expression) list) =
 	match aretes with 
 	|[] -> None
-	|((i1,j1), (i2,j2), expression)::t -> match noeud1,noeud2 with ((a,b), distance1),((c,d), distance2) ->
+	|((i1,j1), (i2,j2), expression)::t -> match noeud1,noeud2 with ((a,b), _),((c,d), _) ->
 																				if (i1 = a) && (j1 = b)	&& (i2 = c) && (j2 = d)	then
 		                                       match expression with
-																					 |Const x -> Some 2
-																					 |Extract (pos_expression1, pos_expression2) -> Some 1
+																					 |Const _ -> Some 2
+																					 |Extract (_, _) -> Some 1
 																				else get_cout_arete_entre_2_noeuds noeud1 noeud2 t  	
 									
 
@@ -517,17 +517,17 @@ let distances_maj noeud_visites noeuds_dijkstra noeuds_maj =
 		match noeud_visites,noeuds_dijkstra with
 		|[],[] -> (noeud_visites_maj, noeuds_dijkstra_maj)
 		|((i1,j1), distance1)::t1 , ((i2,j2), distance2)::t2 -> 
-			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j)) noeuds_maj
-			and verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j)) noeuds_maj in
+			let verification1 = List.find_opt (fun ((i,j), _) -> (i1 = i) && (j1 = j)) noeuds_maj
+			and verification2 = List.find_opt (fun ((i,j), _) -> (i2 = i) && (j2 = j)) noeuds_maj in
 			if Option.is_some verification1 then f t1 t2 noeuds_maj (noeud_visites_maj@[Option.get verification1]) (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 			else if Option.is_some verification2 then f t1 t2 noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) (noeuds_dijkstra_maj@[Option.get verification2])
 		  else f t1 t2 noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 		|((i1,j1), distance1)::t1 , [] -> 
-			let verification1 = List.find_opt (fun ((i,j), distance) -> (i1 = i) && (j1 = j)) noeuds_maj in
+			let verification1 = List.find_opt (fun ((i,j), _) -> (i1 = i) && (j1 = j)) noeuds_maj in
 			if Option.is_some verification1 then f t1 [] noeuds_maj (noeud_visites_maj@[Option.get verification1]) noeuds_dijkstra_maj
 		  else f t1 [] noeuds_maj (noeud_visites_maj@[((i1,j1), distance1)]) noeuds_dijkstra_maj
 		|[] , ((i2,j2), distance2)::t2 -> 
-			let verification2 = List.find_opt (fun ((i,j), distance) -> (i2 = i) && (j2 = j)) noeuds_maj in
+			let verification2 = List.find_opt (fun ((i,j), _) -> (i2 = i) && (j2 = j)) noeuds_maj in
       if Option.is_some verification2 then f [] t2 noeuds_maj noeud_visites_maj (noeuds_dijkstra_maj@[Option.get verification2])
 		  else f [] t2 noeuds_maj noeud_visites_maj (noeuds_dijkstra_maj@[((i2,j2), distance2)])
 
@@ -545,7 +545,7 @@ let test_distances_maj = distances_maj [(("", ""), Some 0)] [(("d", "gh"), None)
 let get_min_parmis_non_visites noeuds_dijkstra =
 	let rec f min min_index index noeuds_dijkstra = 
 		match noeuds_dijkstra with
-		|((i,j), distance)::t ->  if  Option.is_some distance then
+		|((_,_), distance)::t ->  if  Option.is_some distance then
 																				if Option.is_some min then
 			                        						if ((Option.get distance) < (Option.get min)) then
 			                            					f distance index (index + 1) t
@@ -559,7 +559,7 @@ let get_min_parmis_non_visites noeuds_dijkstra =
 																
 	in match noeuds_dijkstra with
 	| [] -> -1
-	| ((i,j), distance)::t -> f distance 0 1 (List.tl noeuds_dijkstra) 
+	| ((_,_), distance)::_ -> f distance 0 1 (List.tl noeuds_dijkstra) 
 
 (* TEST *)
 
@@ -570,7 +570,7 @@ let retirer_nouveau_ajout noeud noeuds_liste =
 	let rec f noeud noeuds_liste nouvelle_noeuds_liste =
 		match noeuds_liste with
 		|[] -> nouvelle_noeuds_liste
-		|((i1,j1), distance1)::t -> match noeud with ((i2,j2), distance2) ->
+		|((i1,j1), distance1)::t -> match noeud with ((i2,j2), _) ->
 																if (i1 = i2) && (j1 = j2) then
 			                             f ((i1,j1), distance1) t nouvelle_noeuds_liste
 																else
@@ -621,7 +621,7 @@ let construction_programme_get_min_ou_dernier_noeud noeuds out1 out2 =
 																                             f t out1 out2 min min_noeud
 															  |[] -> min_noeud
 
-	in match noeuds with |((i,j), distance)::t -> f (List.tl noeuds) out1 out2 distance ((i,j), distance) |[] -> failwith "error"
+	in match noeuds with |((i,j), distance)::_ -> f (List.tl noeuds) out1 out2 distance ((i,j), distance) |[] -> failwith "error"
 
 let constuction_programme_apres_dijkstra dijkstra_resultat dag_final out1 out2 =
 	let rec f dernier_ajout aretes noeuds programme out1 out2 fin_pgm =
@@ -630,7 +630,7 @@ let constuction_programme_apres_dijkstra dijkstra_resultat dag_final out1 out2 =
 		| false -> let voisins = get_noeuds_voisins dernier_ajout aretes noeuds in
 		                          if (List.length voisins != 0) then
 																let min_ou_dernier_noeud = construction_programme_get_min_ou_dernier_noeud voisins out1 out2 in
-																   match min_ou_dernier_noeud with ((i_min,j_min), distance_min) ->
+																   match min_ou_dernier_noeud with ((i_min,j_min), _) ->
 																		if (i_min = out1) && (j_min = out2) then
 																				(programme@[min_ou_dernier_noeud])
 																		else f min_ou_dernier_noeud aretes noeuds (programme@[min_ou_dernier_noeud]) out1 out2 false
@@ -653,7 +653,7 @@ let trouver_arete_apres_dijkstra noeud1 noeud2 aretes =
 																				else
 																					f i1 j1 i2 j2 t
 																					
-	in match noeud1,noeud2 with ((i1,j1), distance1),((i2,j2), distance2) -> f i1 j1 i2 j2 aretes
+	in match noeud1,noeud2 with ((i1,j1), _),((i2,j2), _) -> f i1 j1 i2 j2 aretes
 
 let programme_final_apres_dijkstra constuction_programme_apres_dijkstra_result dag_final =
 	let rec f noeuds aretes programme = 
@@ -668,7 +668,7 @@ let programme_final_apres_dijkstra constuction_programme_apres_dijkstra_result d
 																				programme
 																			else
 																				let get_arete = Option.get arete in
-																				match get_arete with ((a,b), (c,d), expression) ->
+																				match get_arete with ((_,_), (_,_), expression) ->
 																				f t aretes (programme@[expression])
 																				
 	in  f constuction_programme_apres_dijkstra_result dag_final.aretes []		

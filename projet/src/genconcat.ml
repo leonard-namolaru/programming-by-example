@@ -1,19 +1,19 @@
 (* Le programme doit accepter les modes suivants de fonctionnement :
- * genconcat <fichier> : doit afficher le programme Concat produit Ã  partir du contenu de <fichier>.
- * genconcat <fichier> <fichier> : doit crÃ©er un programme Concat Ã  partir du contenu du premier fichier
+ * genconcat <fichier> : doit afficher le programme Concat produit à partir du contenu de <fichier>.
+ * genconcat <fichier> <fichier> : doit créer un programme Concat à partir du contenu du premier fichier
  *                                 (contenant des lignes "input output") puis utiliser ce programme sur
  *                                 le second fichier qui ne contiendra que des lignes "input"
  *)
 
 type mode_de_fonctionnement = | Fichier_input_output | Deux_fichiers
 
-(* Nombre de paramÃ¨tres passÃ©s via la ligne de commande *)
+(* Nombre de paramètres passés via la ligne de commande *)
 let argc = Array.length Sys.argv
 
 (* Le programme a 2 modes de fonctionnement *)
 let mode = if argc = 2 then Fichier_input_output else Deux_fichiers
 
-(* Verification si le nombre de paramÃ¨tres passÃ©s via la ligne de commande est correct *)
+(* Verification si le nombre de paramètres passés via la ligne de commande est correct *)
 let _ =  if ((argc < 2) || (argc > 3)) then
             begin
                Printf.printf "Utilisation : %s <fichier> [<fichier>] \n%!" Sys.argv.(0) ;
@@ -23,7 +23,7 @@ let _ =  if ((argc < 2) || (argc > 3)) then
          else ()
 
 (* ============================================================================================ *)
-(* ***** VERIFICATION SI LES CHEMINS QUI NOUS ONT Ã‰TÃ‰ PASSÃ‰S REPRÃ‰SENTENT BIEN UN FICHIER ***** *)
+(* ***** VERIFICATION SI LES CHEMINS QUI NOUS ONT ÉTÉ PASSÉS REPRÉSENTENT BIEN UN FICHIER ***** *)
 (* ============================================================================================ *)
 
 let rec verification_chemins liste_chemins = match liste_chemins with
@@ -36,29 +36,29 @@ let rec verification_chemins liste_chemins = match liste_chemins with
                                                           else
                                                             false
 
-(* On n'a pas besoin du premier Ã©lÃ©ment de la liste car ce n'est pas un des paramÃ¨tres 
-que l'utilisateur a choisi de transfÃ©rer au logiciel mais le nom du fichier exÃ©cutable *)
+(* On n'a pas besoin du premier élément de la liste car ce n'est pas un des paramètres 
+que l'utilisateur a choisi de transférer au logiciel mais le nom du fichier exécutable *)
 let liste_fichiers = List.tl (Array.to_list Sys.argv)
 
 let _ = if not (verification_chemins liste_fichiers) then 
             begin
-               print_endline "Le systÃ¨me a dÃ©tectÃ© qu'un chemin qui lui est transfÃ©rÃ© ne mÃ¨ne pas Ã  un fichier valide.";
+               print_endline "Le système a detecte qu'un chemin qui lui est transfere ne mene pas a un fichier valide.";
                exit 0; 
             end
         else ()
 
 (* ============================================================================================================ *)
-(* ***** TRANSFORMER LES LISTES D'ENTRÃ‰ES (INPUTS) ET DE SORTIES (OUTPUTS) DANS LES FICHIERS , EN LISTES DE TYPE STRING LIST *****  *)
+(* ***** TRANSFORMER LES LISTES D'ENTRÉES (INPUTS) ET DE SORTIES (OUTPUTS) DANS LES FICHIERS , EN LISTES DE TYPE STRING LIST *****  *)
 (* ============================================================================================================ *)
         
-(* Une fonction qui reÃ§oit en paramÃ¨tre un fichier contenant une liste de inputs et renvoie une liste. Chaque cellule est l'une des entrÃ©es (inputs) *)       
+(* Une fonction qui reçoit en paramètre un fichier contenant une liste de inputs et renvoie une liste. Chaque cellule est l'une des entrées (inputs) *)       
 let input_file_to_list fichier = 
    let rec f liste input_channel = match input_line input_channel with
                                                 | next_line -> f (liste@[String.trim next_line]) input_channel
                                                 | exception End_of_file -> close_in input_channel ; liste
    in f [] (open_in fichier)
 
-(* Une fonction qui reÃ§oit en paramÃ¨tre un fichier contenant une liste de inputs et une liste de outputs
+(* Une fonction qui reçoit en paramètre un fichier contenant une liste de inputs et une liste de outputs
 et renvoie un couple de listes : (input_list, output_list) *)       
 let input_output_file_to_lists fichier = 
    let rec f input_list output_list input_channel = match input_line input_channel with
@@ -93,3 +93,19 @@ let _ = if (List.length input_list2 > 0) then
             print_list input_list2
          end
         else ()
+				
+let mode_fichier__input_output input_list output_list = 
+	 (* Concat.generateur_programme_apres_dijkstra str_in1 str_out1 str_in2 str_out2 *)
+	 let pgm = Concat.generateur_programme_apres_dijkstra (List.hd input_list) (List.hd output_list) (List.nth input_list 1) (List.nth output_list 1) in 
+	  print_endline "Le programme Concat produit a partir du contenu du fichier : " ; List.iter (fun element -> print_endline element) (Concat.programme_to_string_liste pgm)
+	
+let mode_deux_fichier input_list output_list input_list2 = 
+	 (* Concat.generateur_programme_apres_dijkstra str_in1 str_out1 str_in2 str_out2 *)
+	 let pgm = Concat.generateur_programme_apres_dijkstra (List.hd input_list) (List.hd output_list) (List.nth input_list 1) (List.nth output_list 1) in 
+	 print_endline "Fichier 2 , outputs :" ; List.iter (fun element -> print_endline (Concat.evaluation_program pgm element) ) (input_list2)
+	  
+				
+let _ = if (List.length input_list2 > 0) then 
+						mode_deux_fichier input_list output_list input_list2
+				else
+					mode_fichier__input_output input_list output_list

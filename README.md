@@ -1,3 +1,5 @@
+![readme-header.png](readme-header.png)
+
 Projet Programmation Fonctionnelle Avancée
 ============================================
 

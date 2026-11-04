@@ -21,6 +21,11 @@ L’objectif de ce projet est de faire de la programmation par l’exemple : Au 
 - `getconcat <fichier>` pour afficher le programme produit à partir du contenu de `<fichier>`.
 - `getconcat <fichier> <fichier>` pour créer un programme à partir du contenu du premier fichier (contenant des lignes au format `input output`). Dans un second temps, ce programme est appliqué au second fichier. Celui-ci ne contiendra que des lignes au format `input`, et le programme Concat affiche chaque `output` correspondant.
 
+Par exemple,
+- `dune build genconcat.exe`
+- `dune exec -- ./genconcat.exe 'Exemples pour le premier fichier/exemple2'`
+- `dune exec -- ./genconcat.exe 'Exemples pour le premier fichier/exemple2' 'Exemples pour le second fichier/exemple2'`
+
 #### Vidéo de démonstration
 https://www.youtube.com/watch?v=30XD7Nvh2Fc&t=176s
 
